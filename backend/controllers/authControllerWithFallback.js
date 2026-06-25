@@ -769,6 +769,10 @@ export const updateAvatar = async (req, res) => {
       });
     }
 
+    const protocol = req.protocol || (req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+    const host = req.get('host') || (process.env.BACKEND_URL ? process.env.BACKEND_URL.replace(/^https?:\/\//, '').replace(/\/$/, '') : 'localhost:5001');
+    const backendBaseUrl = process.env.BACKEND_URL ? process.env.BACKEND_URL.replace(/\/+$/, '') : `${protocol}://${host}`;
+
     const userId = req.user.id;
 
     try {
@@ -784,7 +788,7 @@ export const updateAvatar = async (req, res) => {
       }
 
       // Create avatar URL - accessible via /uploads/filename
-      const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      const avatarUrl = `${backendBaseUrl}/uploads/${req.file.filename}`;
       user.avatar = avatarUrl;
       await user.save();
 
@@ -800,7 +804,7 @@ export const updateAvatar = async (req, res) => {
       console.error('MongoDB error, using fallback:', dbError);
       
       // Fallback: still save the file and return success
-      const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      const avatarUrl = `${backendBaseUrl}/uploads/${req.file.filename}`;
       
       // Update in-memory user
       const user = memoryUsers.get(userId);
