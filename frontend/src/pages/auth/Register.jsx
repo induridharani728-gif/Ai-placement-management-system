@@ -1,8 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Mail, Lock, User, Phone, X, CheckCircle, ArrowRight, Sun, Moon, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, Phone, X, CheckCircle, ArrowRight, Sun, Moon, Eye, EyeOff, ChevronDown, Briefcase, Users, Award, Target } from "lucide-react";
 import { authAPI, oauthAPI } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLanguage, LanguageSelector } from "../../contexts/LanguageContext";
+
 import { BACKEND_BASE_URL } from "../../config/apiBase";
 import { API_BASE_URL } from "../../config/apiBase";
 
@@ -11,6 +13,77 @@ const roleImages = {
   staff: "https://img.freepik.com/premium-photo/portrait-professional-workers-office-attire-isolated-white-background-3d-cartoon-animation_36897-54576.jpg?w=1060",
   hr: "https://img.freepik.com/premium-photo/business-presentation-3d-realistic-two-employees-crochets-doll-figure-is-doing-presentation_565941-3754.jpg?w=996",
   admin: "https://img.freepik.com/premium-psd/businessman-with-documents-pointing-glasses-3d-isolated-transparent-background-png-psd_1130573-121202.jpg"
+};
+
+const roleConfig = {
+  student: {
+    name: "Candidate",
+    gradient: "from-cyan-500 to-blue-600",
+    glow: "shadow-[0_0_40px_rgba(6,182,212,0.45)] border-cyan-500/50",
+    textColorDark: "text-cyan-400",
+    textColorLight: "text-cyan-600",
+    focusBorder: "focus:border-cyan-500",
+    buttonBg: "bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-cyan-500/20",
+    loginQuote: {
+      heading: "WELCOME BACK!",
+      text: "Your dream career is just a login away. Connect with top employers and unlock endless possibilities.",
+    },
+    registerQuote: {
+      heading: "JOIN US TODAY!",
+      text: "Take the first step toward your professional future. Build your profile and get noticed by global brands.",
+    }
+  },
+  staff: {
+    name: "Staff",
+    gradient: "from-emerald-500 to-teal-600",
+    glow: "shadow-[0_0_40px_rgba(16,185,129,0.45)] border-emerald-500/50",
+    textColorDark: "text-emerald-400",
+    textColorLight: "text-emerald-600",
+    focusBorder: "focus:border-emerald-500",
+    buttonBg: "bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-emerald-500/20",
+    loginQuote: {
+      heading: "WELCOME BACK, MENTOR!",
+      text: "Guiding students to success requires vision and dedication. Thank you for shaping the leaders of tomorrow.",
+    },
+    registerQuote: {
+      heading: "BECOME A SHAPER!",
+      text: "Register to manage departmental drives, evaluate student progress, and drive career placements forward.",
+    }
+  },
+  hr: {
+    name: "HR",
+    gradient: "from-rose-500 to-orange-600",
+    glow: "shadow-[0_0_40px_rgba(244,63,94,0.45)] border-rose-500/50",
+    textColorDark: "text-rose-400",
+    textColorLight: "text-rose-600",
+    focusBorder: "focus:border-rose-500",
+    buttonBg: "bg-gradient-to-r from-rose-500 to-orange-600 hover:shadow-rose-500/20",
+    loginQuote: {
+      heading: "WELCOME BACK, PARTNER!",
+      text: "Exceptional teams are built here. Log in to find the perfect candidates for your organization's future.",
+    },
+    registerQuote: {
+      heading: "BUILD YOUR DREAM TEAM!",
+      text: "Partner with us to gain exclusive access to a pool of highly skilled candidates ready to make an impact.",
+    }
+  },
+  admin: {
+    name: "Admin",
+    gradient: "from-orange-500 to-red-600",
+    glow: "shadow-[0_0_40px_rgba(249,115,22,0.55)] border-orange-500/50",
+    textColorDark: "text-orange-400",
+    textColorLight: "text-orange-600",
+    focusBorder: "focus:border-orange-500",
+    buttonBg: "bg-gradient-to-r from-orange-500 to-red-600 hover:shadow-orange-500/20",
+    loginQuote: {
+      heading: "SYSTEM CONTROL",
+      text: "Oversee operations, manage integrations, and keep the placement machine running smoothly and securely.",
+    },
+    registerQuote: {
+      heading: "ADMIN REGISTRATION",
+      text: "Create an administrator account to configure system properties, manage databases, and handle settings.",
+    }
+  }
 };
 
 function getAvatarUrl(avatar) {
@@ -22,10 +95,15 @@ function getAvatarUrl(avatar) {
 }
 
 export default function Register() {
+  const { t } = useLanguage();
   const backendBaseUrl = BACKEND_BASE_URL;
   // Add OTP display state at the top to avoid ReferenceError
   const [otpDisplay, setOtpDisplay] = useState("");
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get("role");
+    return ["student", "staff", "hr", "admin"].includes(roleParam) ? roleParam : "student";
+  });
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -86,13 +164,15 @@ export default function Register() {
   const highContrastInputStyle = darkMode
     ? {
         WebkitTextFillColor: "#ffffff",
-        WebkitBoxShadow: "0 0 0 1000px rgba(15, 23, 42, 0.92) inset",
+        WebkitBoxShadow: "0 0 0 1000px #0b0f19 inset",
         caretColor: "#ffffff",
+        color: "#ffffff",
       }
     : {
-        WebkitTextFillColor: "#1e293b",
-        WebkitBoxShadow: "0 0 0 1000px #fff inset",
-        caretColor: "#1e293b",
+        WebkitTextFillColor: "#0f172a",
+        WebkitBoxShadow: "0 0 0 1000px #ffffff inset",
+        caretColor: "#0f172a",
+        color: "#0f172a",
       };
 
   useEffect(() => {
@@ -533,63 +613,34 @@ export default function Register() {
             </Link>
           </div>
 
-          <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-full transition-all ${
-              darkMode ? "bg-slate-800 text-yellow-400" : "bg-slate-800 text-yellow-300"
-            }`}
-          >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+          <div className="flex items-center gap-4">
+            <LanguageSelector currentColors={{ input: darkMode ? "#1e293b" : "#f1f5f9", border: darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)", text: darkMode ? "#ffffff" : "#0f172a" }} />
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-full transition-all ${
+                darkMode ? "bg-slate-800 text-yellow-400" : "bg-slate-800 text-yellow-300"
+              }`}
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
+
         </div>
       </nav>
 
       {/* MAIN CONTENT */}
       <div className="flex items-center justify-center p-4 md:p-10 pt-24 relative z-10 min-h-screen">
         <div
-          className={`flex flex-col md:flex-row w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 ${
+          className={`flex flex-col md:flex-row w-full max-w-5xl rounded-3xl overflow-hidden min-h-[650px] transition-all duration-500 ${
             darkMode
-              ? "bg-slate-900/80 backdrop-blur-xl border border-white/10"
-              : "bg-white backdrop-blur-xl border border-gray-200"
-          }`}
+              ? "bg-[#0b0f19] border border-white/10"
+              : "bg-white border border-gray-200"
+          } ${roleConfig[role]?.glow || "shadow-2xl"}`}
         >
-          {/* LEFT SIDE - ROLE IMAGE */}
-          <div className={`hidden md:flex md:w-1/2 bg-gradient-to-br ${roleGradients[role]} relative items-center justify-center p-12 text-white`}>
-            <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-10 right-10 w-32 h-32 bg-black/10 rounded-full blur-3xl" />
-
-            <div className="relative z-10 text-center flex flex-col items-center gap-6">
-              <div className="w-64 h-72 rounded-xl overflow-hidden shadow-2xl">
-                <img 
-                  src={roleImages[role] && roleImages[role].startsWith('/uploads/')
-                    ? `${API_BASE_URL.replace(/\/api\/?$/, '')}${roleImages[role]}`
-                    : roleImages[role]}
-                  alt={`${role} role`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h2 className="text-2xl font-bold mb-3 uppercase tracking-wider">{role.charAt(0).toUpperCase() + role.slice(1)} Signup</h2>
-              <p className="text-sm opacity-90 mb-6">
-                Join thousands on their placement journey
-              </p>
-              <div className="mt-6 space-y-3 text-sm">
-                <div className="flex items-center gap-2 justify-center">
-                  <CheckCircle size={18} /> Smart Job Matching
-                </div>
-                <div className="flex items-center gap-2 justify-center">
-                  <CheckCircle size={18} /> Resume Analysis
-                </div>
-                <div className="flex items-center gap-2 justify-center">
-                  <CheckCircle size={18} /> 500+ Recruiters
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT SIDE - FORM */}
-          <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+          {/* LEFT SIDE - FORM */}
+          <div className="w-full md:w-[55%] p-8 md:p-12 flex flex-col justify-center bg-transparent">
             <div className="flex justify-center mb-6">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-2xl overflow-hidden border border-black/10 dark:border-white/15 shadow-xl bg-black">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden border border-black/10 dark:border-white/15 shadow-xl bg-black">
                 <img
                   src="https://static.vecteezy.com/system/resources/previews/009/634/721/non_2x/vrd-letter-logo-design-with-polygon-shape-vrd-polygon-and-cube-shape-logo-design-vrd-hexagon-logo-template-white-and-black-colors-vrd-monogram-business-and-real-estate-logo-vector.jpg"
                   alt="VRD logo"
@@ -598,9 +649,9 @@ export default function Register() {
               </div>
             </div>
             <div className="mb-8">
-              <h1 className={`text-3xl font-bold tracking-tight ${darkMode ? "text-white" : "text-gray-900"}`}>Create Account</h1>
-              <div className={`h-1 w-16 rounded-full mt-2 ${darkMode ? "bg-blue-600" : "bg-blue-400"}`} />
-              <p className={`mt-3 text-sm font-bold ${darkMode ? "text-blue-200" : "text-gray-900"}`}>
+              <h1 className={`text-3xl font-bold tracking-tight ${darkMode ? "text-white" : "text-gray-900"}`}>{t('createAccount')}</h1>
+              <div className={`h-1 w-16 rounded-full mt-2 bg-gradient-to-r ${roleConfig[role]?.gradient || "from-blue-600 to-indigo-600"}`} />
+              <p className={`mt-3 text-sm font-bold ${darkMode ? "text-slate-100" : "text-slate-800"}`}>
                 Enter your details to get started
               </p>
             </div>
@@ -615,186 +666,236 @@ export default function Register() {
               
               {/* ROLE SELECT */}
               <div className="relative">
-                <label className={`text-xs font-semibold uppercase mb-2 block ${darkMode ? 'text-white' : 'text-gray-800'}`}> 
-                  Select Role
+                <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
+                  {t('selectRole')}
                 </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  style={highContrastInputStyle}
-                  className={`w-full pl-10 pr-4 py-3 border-2 focus:border-blue-500 rounded-xl outline-none transition-all appearance-none ${darkMode ? 'bg-slate-800/90 border-slate-500 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                >
-                  <option value="student">Student</option>
-                  <option value="staff">Staff</option>
-                  <option value="hr">HR</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <User size={18} />
+                <div className="relative">
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    style={highContrastInputStyle}
+                    className={`w-full py-2 bg-transparent border-0 border-b-2 outline-none transition-all font-medium appearance-none ${
+                      darkMode 
+                        ? 'text-white border-slate-700' 
+                        : 'text-gray-900 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                  >
+                    <option value="student" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', color: darkMode ? '#ffffff' : '#0f172a' }}>Student (Candidate)</option>
+                    <option value="staff" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', color: darkMode ? '#ffffff' : '#0f172a' }}>Staff</option>
+                    <option value="hr" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', color: darkMode ? '#ffffff' : '#0f172a' }}>HR</option>
+                    <option value="admin" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', color: darkMode ? '#ffffff' : '#0f172a' }}>Admin</option>
+                  </select>
+                  <div className={`absolute right-2 top-3 pointer-events-none ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <ChevronDown size={18} />
+                  </div>
                 </div>
               </div>
 
               {/* NAME INPUT */}
               <div className="relative">
-                <label className={`text-xs font-semibold uppercase mb-2 block ${darkMode ? 'text-white dark:text-blue-200' : 'text-gray-800'}`}> 
-                  Full Name
+                <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
+                  {t('fullName')}
                 </label>
-                <input
-                  type="text"
-                  placeholder="Enter your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  style={highContrastInputStyle}
-                  className={`w-full pl-10 pr-4 py-3 border-2 focus:border-blue-500 rounded-xl outline-none transition-all ${darkMode ? 'bg-slate-800/90 border-slate-500 text-white placeholder:text-slate-300' : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'}`}
-                  required
-                />
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <User size={18} />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    style={highContrastInputStyle}
+                    className={`w-full pr-10 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                      darkMode 
+                        ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                        : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    required
+                  />
+                  <div className={`absolute right-2 top-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <User size={18} />
+                  </div>
                 </div>
               </div>
 
               {/* EMAIL INPUT */}
               <div className="relative">
-                <label className={`text-xs font-semibold uppercase mb-2 block ${darkMode ? 'text-white' : 'text-gray-800'}`}> 
-                  Email Address
+                <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
+                  {t('emailAddress')}
                 </label>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setEmailAvailability(null);
-                  }}
-                  onBlur={() => checkAvailability("email", email)}
-                  style={highContrastInputStyle}
-                  className={`w-full pl-10 pr-4 py-3 border-2 focus:border-blue-500 rounded-xl outline-none transition-all ${darkMode ? 'bg-slate-800/90 border-slate-500 text-white placeholder:text-slate-300' : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'}`}
-                  required
-                />
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <Mail size={18} />
+                <div className="relative">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailAvailability(null);
+                    }}
+                    onBlur={() => checkAvailability("email", email)}
+                    style={highContrastInputStyle}
+                    className={`w-full pr-10 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                      darkMode 
+                        ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                        : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    required
+                  />
+                  <div className={`absolute right-2 top-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Mail size={18} />
+                  </div>
                 </div>
                 {emailAvailability !== null && (
-                  <p className={`mt-1 text-xs ${emailAvailability ? 'text-emerald-500' : 'text-red-500'}`}>
-                    {emailAvailability ? 'Email is available' : 'Email already exists'}
+                  <p className={`mt-1 text-xs font-semibold ${emailAvailability ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {emailAvailability ? '✓ Email is available' : '✗ Email already exists'}
                   </p>
                 )}
               </div>
 
               {/* PHONE INPUT */}
               <div className="relative">
-                <label className={`text-xs font-semibold uppercase mb-2 block ${darkMode ? 'text-white' : 'text-gray-800'}`}> 
+                <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                   Phone Number
                 </label>
-                <input
-                  type="tel"
-                  placeholder="+91 Enter your phone"
-                  value={phone}
-                  onChange={(e) => {
-                    setPhone(e.target.value);
-                    setPhoneAvailability(null);
-                  }}
-                  onBlur={() => checkAvailability("phone", phone)}
-                  style={highContrastInputStyle}
-                  className={`w-full pl-10 pr-4 py-3 border-2 focus:border-blue-500 rounded-xl outline-none transition-all ${darkMode ? 'bg-slate-800/90 border-slate-500 text-white placeholder:text-slate-300' : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'}`}
-                  required
-                />
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <Phone size={18} />
+                <div className="relative">
+                  <input
+                    type="tel"
+                    placeholder="+91 Enter your phone"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      setPhoneAvailability(null);
+                    }}
+                    onBlur={() => checkAvailability("phone", phone)}
+                    style={highContrastInputStyle}
+                    className={`w-full pr-10 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                      darkMode 
+                        ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                        : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    required
+                  />
+                  <div className={`absolute right-2 top-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Phone size={18} />
+                  </div>
                 </div>
                 {phoneAvailability !== null && (
-                  <p className={`mt-1 text-xs ${phoneAvailability ? 'text-emerald-500' : 'text-red-500'}`}>
-                    {phoneAvailability ? 'Phone is available' : 'Phone already exists'}
+                  <p className={`mt-1 text-xs font-semibold ${phoneAvailability ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {phoneAvailability ? '✓ Phone is available' : '✗ Phone already exists'}
                   </p>
                 )}
               </div>
 
               {role !== "student" && (
                 <div className="relative">
-                  <label className="text-xs font-semibold uppercase mb-2 block text-white">
+                  <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                     Department
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter department"
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    style={highContrastInputStyle}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-500 focus:border-blue-500 rounded-xl outline-none transition-all bg-slate-800/90 text-white placeholder:text-slate-300"
-                    required
-                  />
-                  <div className="absolute left-3 top-9 text-slate-200">
-                    <User size={18} />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Enter department"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      style={highContrastInputStyle}
+                      className={`w-full pr-10 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                        darkMode 
+                          ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                          : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                      } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                      required
+                    />
+                    <div className={`absolute right-2 top-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                      <User size={18} />
+                    </div>
                   </div>
                 </div>
               )}
 
               {role === "student" && (
                 <div className="relative">
-                  <label className="text-xs font-semibold uppercase mb-2 block text-white">
+                  <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                     Student Roll Number (Optional)
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter roll number"
-                    value={studentRollNumber}
-                    onChange={(e) => setStudentRollNumber(e.target.value)}
-                    style={highContrastInputStyle}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-500 focus:border-blue-500 rounded-xl outline-none transition-all bg-slate-800/90 text-white placeholder:text-slate-300"
-                  />
-                  <div className="absolute left-3 top-9 text-slate-200">
-                    <User size={18} />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Enter roll number"
+                      value={studentRollNumber}
+                      onChange={(e) => setStudentRollNumber(e.target.value)}
+                      style={highContrastInputStyle}
+                      className={`w-full pr-10 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                        darkMode 
+                          ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                          : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                      } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    />
+                    <div className={`absolute right-2 top-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                      <User size={18} />
+                    </div>
                   </div>
                 </div>
               )}
 
               {(role === "staff" || role === "hr" || role === "admin") && (
                 <div className="relative">
-                  <label className="text-xs font-semibold uppercase mb-2 block text-white">
+                  <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                     Employee ID (Optional)
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter employee ID"
-                    value={employeeId}
-                    onChange={(e) => setEmployeeId(e.target.value)}
-                    style={highContrastInputStyle}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-500 focus:border-blue-500 rounded-xl outline-none transition-all bg-slate-800/90 text-white placeholder:text-slate-300"
-                  />
-                  <div className="absolute left-3 top-9 text-slate-200">
-                    <User size={18} />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Enter employee ID"
+                      value={employeeId}
+                      onChange={(e) => setEmployeeId(e.target.value)}
+                      style={highContrastInputStyle}
+                      className={`w-full pr-10 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                        darkMode 
+                          ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                          : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                      } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    />
+                    <div className={`absolute right-2 top-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                      <User size={18} />
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* PASSWORD INPUT */}
               <div className="relative">
-                <label className={`text-xs font-semibold uppercase mb-2 block ${darkMode ? 'text-white' : 'text-gray-800'}`}> 
-                  Password
+                <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
+                  {t('password')}
                 </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={highContrastInputStyle}
-                  className={`w-full pl-10 pr-12 py-3 border-2 focus:border-blue-500 rounded-xl outline-none transition-all ${darkMode ? 'bg-slate-800/90 border-slate-500 text-white placeholder:text-slate-300' : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'}`}
-                  required
-                />
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <Lock size={18} />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={highContrastInputStyle}
+                    className={`w-full pr-16 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                      darkMode 
+                        ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                        : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    required
+                  />
+                  <div className="absolute right-2 top-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className={`text-xs font-bold hover:text-slate-200 transition-colors uppercase ${
+                        darkMode ? 'text-slate-300' : 'text-slate-700'
+                      }`}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                    <span className={darkMode ? 'text-slate-400' : 'text-slate-500'}>|</span>
+                    <Lock size={18} className={darkMode ? 'text-slate-300' : 'text-slate-700'} />
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-9 text-slate-200 hover:text-white"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
                 {password.length > 0 && (
                   <>
-                    <p className="mt-2 text-[11px] text-slate-200">
+                    <p className="mt-2 text-[11px] text-slate-400">
                       Recommended for better security: 8+ chars with a mix of letters, numbers, and symbols.
                     </p>
                     <div className="mt-2">
@@ -804,10 +905,10 @@ export default function Register() {
                           style={{ width: `${(passwordScore / 5) * 100}%` }}
                         />
                       </div>
-                      <p className="mt-1 text-[11px] font-semibold text-white">
+                      <p className="mt-1 text-[11px] font-semibold text-slate-300">
                         Strength: {passwordStrength}
                       </p>
-                      <ul className="mt-1 text-[10px] space-y-0.5 text-slate-200">
+                      <ul className="mt-1 text-[10px] space-y-0.5 text-slate-400">
                         <li>{passwordChecks.minLength ? "✓" : "○"} At least 8 characters</li>
                         <li>{passwordChecks.uppercase ? "✓" : "○"} One uppercase letter</li>
                         <li>{passwordChecks.lowercase ? "✓" : "○"} One lowercase letter</li>
@@ -821,29 +922,37 @@ export default function Register() {
 
               {/* CONFIRM PASSWORD */}
               <div className="relative">
-                <label className="text-xs font-semibold uppercase mb-2 block text-white">
-                  Confirm Password
+                <label className={`text-xs uppercase tracking-wider font-bold mb-1.5 block ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
+                  {t('confirmPassword') || 'Confirm Password'}
                 </label>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Re-enter password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  style={highContrastInputStyle}
-                  className="w-full pl-10 pr-12 py-3 border-2 border-slate-500 focus:border-blue-500 rounded-xl outline-none transition-all bg-slate-800/90 text-white placeholder:text-slate-300"
-                  required
-                />
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <Lock size={18} />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Re-enter password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={highContrastInputStyle}
+                    className={`w-full pr-16 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                      darkMode 
+                        ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                        : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    required
+                  />
+                  <div className="absolute right-2 top-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className={`text-xs font-bold hover:text-slate-200 transition-colors uppercase ${
+                        darkMode ? 'text-slate-300' : 'text-slate-700'
+                      }`}
+                    >
+                      {showConfirmPassword ? "Hide" : "Show"}
+                    </button>
+                    <span className={darkMode ? 'text-slate-400' : 'text-slate-500'}>|</span>
+                    <Lock size={18} className={darkMode ? 'text-slate-300' : 'text-slate-700'} />
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
-                  className="absolute right-3 top-9 text-slate-200 hover:text-white"
-                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
               </div>
 
               {/* CHECKBOX */}
@@ -853,14 +962,19 @@ export default function Register() {
                   id="terms"
                   checked={agreeTerms}
                   onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="w-4 h-4 rounded border-2 border-blue-500 accent-blue-600"
+                  className={`w-4 h-4 rounded border-slate-700 bg-transparent ${
+                    role === 'student' ? 'text-cyan-500 focus:ring-cyan-500/30' :
+                    role === 'staff' ? 'text-emerald-500 focus:ring-emerald-500/30' :
+                    role === 'hr' ? 'text-rose-500 focus:ring-rose-500/30' :
+                    'text-orange-500 focus:ring-orange-500/30'
+                  }`}
                 />
-                <label htmlFor="terms" className={`text-xs ${darkMode ? 'text-slate-100' : 'text-gray-700'}`}> 
+                <label htmlFor="terms" className={`text-xs ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                   I agree to{" "}
                   <button
-                    type="button"
-                    onClick={() => setSection("terms")}
-                    className="text-blue-600 font-semibold hover:underline"
+                     type="button"
+                     onClick={() => setSection("terms")}
+                     className={`font-semibold hover:underline ${darkMode ? roleConfig[role]?.textColorDark : roleConfig[role]?.textColorLight}`}
                   >
                     Terms & Conditions
                   </button>
@@ -871,11 +985,11 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading || availabilityLoading}
-                className={`w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all transform active:scale-[0.98] mt-6 flex items-center justify-center gap-2 uppercase ${
+                className={`w-full py-3.5 ${roleConfig[role]?.buttonBg} text-white font-bold rounded-xl shadow-lg transition-all duration-300 transform active:scale-[0.98] mt-6 flex items-center justify-center gap-2 uppercase tracking-wider text-sm hover:brightness-110 active:brightness-95 ${
                   loading || availabilityLoading ? "opacity-75 cursor-not-allowed" : ""
                 }`}
               >
-                {loading ? "Creating Account..." : "Sign Up"} {!loading && <ArrowRight size={18} />}
+                {loading ? "Creating Account..." : t('register')} {!loading && <ArrowRight size={18} />}
               </button>
 
               {/* OAuth Divider */}
@@ -883,8 +997,8 @@ export default function Register() {
                 <div className="absolute inset-0 flex items-center">
                   <div className={`w-full h-px ${darkMode ? 'bg-slate-700' : 'bg-gray-300'}`}></div>
                 </div>
-                <div className={`relative flex justify-center text-sm ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
-                  <span className={`px-2 font-semibold ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>Or sign up with</span>
+                <div className={`relative flex justify-center text-sm ${darkMode ? 'bg-[#0b0f19]' : 'bg-white'}`}>
+                  <span className={`px-2 font-semibold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>Or sign up with</span>
                 </div>
               </div>
 
@@ -893,7 +1007,11 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => handleOAuthRegister("Google")}
-                  className="py-3 rounded-xl font-semibold transition-all border-2 flex items-center justify-center gap-2 hover:scale-105 bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                  className={`py-3 rounded-xl font-semibold transition-all border-2 flex items-center justify-center gap-2 hover:scale-105 ${
+                    darkMode
+                      ? "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
                   title="Sign up with Google"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -902,21 +1020,48 @@ export default function Register() {
                     <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  <span className="hidden sm:inline">Google</span>
+                  <span className="hidden sm:inline text-gray-900 dark:text-white">Google</span>
                 </button>
               </div>
             </form>
 
             {/* LOGIN LINK */}
-            <p className={`mt-4 text-sm text-center font-bold ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>
-              <span className={darkMode ? '' : 'text-gray-800'} style={darkMode ? {color:'white', textShadow:'0 1px 4px #000'} : {color:'#222'}}>
-                Already have an account?
-              </span>
-              <Link to="/" className={`ml-1 font-bold hover:underline ${darkMode ? 'text-blue-300' : 'text-blue-600'}`}
-                style={darkMode ? {textShadow:'0 1px 4px #000'} : {}}>
+            <p className={`mt-6 text-sm text-center font-semibold ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>
+              <span>Already have an account?</span>
+              <Link to={`/?role=${role}`} className={`ml-1 font-bold hover:underline transition-all ${darkMode ? roleConfig[role]?.textColorDark : roleConfig[role]?.textColorLight}`}>
                 Login here
               </Link>
             </p>
+          </div>
+
+          {/* RIGHT SIDE (Role-Specific Quotation Panel) */}
+          <div
+            className={`hidden md:flex md:w-[45%] bg-gradient-to-br ${roleConfig[role]?.gradient || 'from-blue-600 to-indigo-700'} relative items-center justify-center p-12 transition-all duration-700`}
+            style={{ clipPath: 'polygon(15% 0, 100% 0, 100% 100%, 0% 100%)' }}
+          >
+            {/* Glowing backdrop decorative blobs */}
+            <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse" />
+            <div className="absolute bottom-10 left-10 w-24 h-24 bg-black/15 rounded-full blur-xl" />
+
+            <div className="relative z-10 text-center text-white max-w-sm mx-auto flex flex-col gap-6">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg">
+                  {role === 'student' ? <Briefcase size={28} /> :
+                   role === 'staff' ? <Users size={28} /> :
+                   role === 'hr' ? <Award size={28} /> :
+                   <Target size={28} />}
+                </div>
+              </div>
+              <div>
+                <h2 className="text-3xl font-extrabold uppercase tracking-widest text-shadow-md">
+                  {roleConfig[role]?.registerQuote?.heading}
+                </h2>
+                <div className="mt-3 h-0.5 w-12 bg-white/50 mx-auto rounded-full" />
+                <p className="mt-6 text-sm font-medium leading-relaxed opacity-90">
+                  {roleConfig[role]?.registerQuote?.text}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -962,8 +1107,8 @@ export default function Register() {
       {section === "contact" && (
         <InfoModal title="Contact Support" onClose={() => setSection(null)}>
           <div className="space-y-4">
-            <h4 className="font-semibold">Get in Touch</h4>
-            <div className="text-sm space-y-3 opacity-90">
+            <h4 className={`font-semibold ${darkMode ? "text-white" : "text-slate-900"}`}>Get in Touch</h4>
+            <div className={`text-sm space-y-3 ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
               <p>
                 📧 <strong>Email:</strong> vamsivalluri52@gmail.com
               </p>
@@ -977,11 +1122,11 @@ export default function Register() {
                 🕐 <strong>Support Hours:</strong> Mon-Fri, 9 AM - 6 PM IST
               </p>
             </div>
-            <h4 className="font-semibold mt-4">Follow Us:</h4>
+            <h4 className={`font-semibold mt-4 ${darkMode ? "text-white" : "text-slate-900"}`}>Follow Us:</h4>
             <div className="flex gap-4 text-sm">
-              <a href="#" className="text-blue-600 hover:underline">LinkedIn</a>
-              <a href="#" className="text-blue-600 hover:underline">GitHub</a>
-              <a href="#" className="text-blue-600 hover:underline">Twitter</a>
+              <a href="#" className={darkMode ? "text-blue-400 hover:underline" : "text-blue-600 hover:underline"}>LinkedIn</a>
+              <a href="#" className={darkMode ? "text-blue-400 hover:underline" : "text-blue-600 hover:underline"}>GitHub</a>
+              <a href="#" className={darkMode ? "text-blue-400 hover:underline" : "text-blue-600 hover:underline"}>Twitter</a>
             </div>
           </div>
         </InfoModal>

@@ -475,18 +475,51 @@ async function generateAssistantReply({ message, role, history, section, fixedCo
   const cached = responseCache.get(cacheKey);
   if (cached) return cached;
 
+  const openaiKey = process.env.OPENAI_API_KEY;
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const prompt = buildConversationPrompt({ message, role, history, section, fixedContext });
 
   let reply = '';
   let provider = 'fallback';
+  const normHistory = normalizeHistory(history);
 
-  if (apiKey) {
+  if (openaiKey) {
+    try {
+      provider = 'openai';
+      const messages = [
+        ...normHistory.map(h => ({
+          role: h.role === 'model' ? 'assistant' : 'user',
+          content: h.content
+        })),
+        { role: 'user', content: prompt }
+      ];
+
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          messages,
+          max_tokens: 2048
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${openaiKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 8000
+        }
+      );
+      reply = response.data.choices?.[0]?.message?.content || '';
+    } catch (e) {
+      console.error("OpenAI execution failed, trying Gemini fallback:", e.message);
+    }
+  }
+
+  if (!reply && apiKey) {
     try {
       const client = new GoogleGenerativeAI(apiKey);
       const model = client.getGenerativeModel({ model: GEMINI_MODEL });
 
-      const normHistory = normalizeHistory(history);
       let parts = [{ text: prompt }];
 
       if (file && file.mimetype.startsWith('image/')) {
@@ -528,6 +561,7 @@ async function generateAssistantReply({ message, role, history, section, fixedCo
       provider = 'fallback';
     }
   }
+
 
   if (!reply || !reply.trim()) {
     reply = buildFallbackReply(message, normRole, fixedContext);

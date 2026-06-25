@@ -15,6 +15,7 @@ import EmailModal from "../../components/EmailModal";
 import { studentAPI, statsAPI, jobAPI, placementsAPI, examsAPI, applicationsAPI, jobRequisitionsAPI, adminAPI, notificationsAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage, LanguageSelector } from '../../contexts/LanguageContext';
 import {
   Shield,
   Users,
@@ -74,6 +75,7 @@ import {
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   const [currentView, setCurrentView] = useState("overview");
   const [isSidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
@@ -214,97 +216,105 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     setDataLoading(true);
     try {
-      // Fetch all students
-      try {
-        const studentsRes = await studentAPI.getAll();
-        setStudents(studentsRes.data.students || []);
-      } catch (error) {
-        console.error('Error fetching students:', error);
+      const basePromises = [
+        studentAPI.getAll(),
+        placementsAPI.getAll(),
+        jobAPI.getAll(),
+        applicationsAPI.getAll(),
+        jobRequisitionsAPI.getAll(),
+        statsAPI.getAdminStats()
+      ];
+
+      const isAdmin = user && user.role === 'admin';
+      if (isAdmin) {
+        basePromises.push(
+          adminAPI.getAllUsers(),
+          adminAPI.getSystemStatus(),
+          adminAPI.getAnalytics(),
+          adminAPI.getAlerts(),
+          adminAPI.getAuditLogs(),
+          adminAPI.getControlCenter()
+        );
       }
 
-      // Fetch placements
-      try {
-        const placementsRes = await placementsAPI.getAll();
-        setPlacements(placementsRes.data.placements || []);
-      } catch (error) {
-        console.error('Error fetching placements:', error);
+      const results = await Promise.allSettled(basePromises);
+
+      // Process base responses
+      if (results[0].status === 'fulfilled') {
+        setStudents(results[0].value.data.students || []);
+      } else {
+        console.error('Error fetching students:', results[0].reason);
       }
 
-      // Fetch jobs
-      try {
-        const jobsRes = await jobAPI.getAll();
-        setJobs(jobsRes.data.jobs || []);
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
+      if (results[1].status === 'fulfilled') {
+        setPlacements(results[1].value.data.placements || []);
+      } else {
+        console.error('Error fetching placements:', results[1].reason);
       }
 
-      // Fetch applications
-      try {
-        const applicationsRes = await applicationsAPI.getAll();
-        setApplications(applicationsRes.data.applications || []);
-      } catch (error) {
-        console.error('Error fetching applications:', error);
+      if (results[2].status === 'fulfilled') {
+        setJobs(results[2].value.data.jobs || []);
+      } else {
+        console.error('Error fetching jobs:', results[2].reason);
       }
 
-      // Fetch job requisitions
-      try {
-        const reqsRes = await jobRequisitionsAPI.getAll();
-        setJobRequisitions(reqsRes.data.jobRequisitions || []);
-      } catch (error) {
-        console.error('Error fetching job requisitions:', error);
+      if (results[3].status === 'fulfilled') {
+        setApplications(results[3].value.data.applications || []);
+      } else {
+        console.error('Error fetching applications:', results[3].reason);
       }
 
-      // Fetch admin stats
-      try {
-        const statsRes = await statsAPI.getAdminStats();
-        setDashboardStats(statsRes.data || null);
-      } catch (error) {
-        console.error('Error fetching admin stats:', error);
+      if (results[4].status === 'fulfilled') {
+        setJobRequisitions(results[4].value.data.jobRequisitions || []);
+      } else {
+        console.error('Error fetching job requisitions:', results[4].reason);
       }
-      
-      // Fetch admin-specific data
-      if (user.role === 'admin') {
-        try {
-          const usersRes = await adminAPI.getAllUsers();
-          setUsers(usersRes.data.users || []);
-        } catch (error) {
-          console.error('Error fetching users:', error);
+
+      if (results[5].status === 'fulfilled') {
+        setDashboardStats(results[5].value.data || null);
+      } else {
+        console.error('Error fetching admin stats:', results[5].reason);
+      }
+
+      // Process admin specific responses if applicable
+      if (isAdmin) {
+        if (results[6].status === 'fulfilled') {
+          setUsers(results[6].value.data.users || []);
+        } else {
+          console.error('Error fetching users:', results[6].reason);
         }
-        
-        try {
-          const statusRes = await adminAPI.getSystemStatus();
-          setSystemStatus(statusRes.data.system || null);
-        } catch (error) {
-          console.error('Error fetching system status:', error);
+
+        if (results[7].status === 'fulfilled') {
+          setSystemStatus(results[7].value.data.system || null);
+        } else {
+          console.error('Error fetching system status:', results[7].reason);
         }
-        
-        try {
-          const analyticsRes = await adminAPI.getAnalytics();
-          setAdminAnalytics(analyticsRes.data.analytics || null);
-        } catch (error) {
-          console.error('Error fetching analytics:', error);
+
+        if (results[8].status === 'fulfilled') {
+          setAdminAnalytics(results[8].value.data.analytics || null);
+        } else {
+          console.error('Error fetching analytics:', results[8].reason);
         }
-        
-        try {
-          const alertsRes = await adminAPI.getAlerts();
-          setSystemAlerts(alertsRes.data.alerts || []);
-        } catch (error) {
-          console.error('Error fetching alerts:', error);
+
+        if (results[9].status === 'fulfilled') {
+          setSystemAlerts(results[9].value.data.alerts || []);
+        } else {
+          console.error('Error fetching alerts:', results[9].reason);
         }
-        
-        try {
-          const logsRes = await adminAPI.getAuditLogs();
-          setAuditLogs(logsRes.data.logs || []);
-        } catch (error) {
-          console.error('Error fetching audit logs:', error);
+
+        if (results[10].status === 'fulfilled') {
+          setAuditLogs(results[10].value.data.logs || []);
+        } else {
+          console.error('Error fetching audit logs:', results[10].reason);
         }
 
         try {
           setControlLoading(true);
-          const controlRes = await adminAPI.getControlCenter();
-          setControlCenter(controlRes.data.data || null);
-        } catch (error) {
-          console.error('Error fetching control center:', error);
+          if (results[11].status === 'fulfilled') {
+            setControlCenter(results[11].value.data.data || null);
+          } else {
+            console.error('Error fetching control center:', results[11].reason);
+          }
         } finally {
           setControlLoading(false);
         }
@@ -465,16 +475,16 @@ const AdminDashboard = () => {
   ]);
 
   const menuItems = [
-    { id: "overview", label: "Overview", icon: LayoutDashboard },
-    { id: "control", label: "Control Center", icon: Shield },
-    { id: "profile", label: "My Profile", icon: User },
-    { id: "users", label: "User Directory", icon: Users },
-    { id: "analytics", label: "Deep Analytics", icon: BarChart3 },
-    { id: "system", label: "System Config", icon: Settings },
-    { id: "logs", label: "Audit Logs", icon: Terminal },
-    { id: "alerts", label: "Alert Center", icon: AlertCircle },
-    { id: "servers", label: "Server Status", icon: Server },
-    { id: "email", label: "Email Center", icon: Mail },
+    { id: "overview", translationKey: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "control", translationKey: "controlCenter", label: "Control Center", icon: Shield },
+    { id: "profile", translationKey: "myProfile", label: "My Profile", icon: User },
+    { id: "users", translationKey: "userDirectory", label: "User Directory", icon: Users },
+    { id: "analytics", translationKey: "deepAnalytics", label: "Deep Analytics", icon: BarChart3 },
+    { id: "system", translationKey: "systemConfig", label: "System Config", icon: Settings },
+    { id: "logs", translationKey: "auditLogs", label: "Audit Logs", icon: Terminal },
+    { id: "alerts", translationKey: "alertCenter", label: "Alert Center", icon: AlertCircle },
+    { id: "servers", translationKey: "serverStatus", label: "Server Status", icon: Server },
+    { id: "email", translationKey: "emailCenter", label: "Email Center", icon: Mail },
   ];
 
   const mockUserBreakdown = [
@@ -782,7 +792,7 @@ const AdminDashboard = () => {
             >
               <Icon size={22} />
               {isSidebarOpen && (
-                <span className="font-bold text-sm">{item.label}</span>
+                <span className="font-bold text-sm">{t(item.translationKey)}</span>
               )}
             </button>
           );
@@ -1972,7 +1982,7 @@ const AdminDashboard = () => {
                     </span>
                   </div>
                   <h1 className="text-5xl font-black tracking-tighter">
-                    {currentView.toUpperCase()}
+                    {t(menuItems.find(item => item.id === currentView)?.translationKey || currentView).toUpperCase()}
                   </h1>
                   <p className="text-slate-500 text-xs font-semibold tracking-widest">
                     CENTRAL ORCHESTRATION NODE · ADMIN PRIVILEGES ACTIVE
@@ -1980,6 +1990,9 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-6">
+                  {/* Language Selector */}
+                  <LanguageSelector currentColors={{ input: resolvedTheme === 'dark' ? "rgba(255,255,255,0.05)" : "#f1f5f9", border: resolvedTheme === 'dark' ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)", text: resolvedTheme === 'dark' ? "#ffffff" : "#0f172a" }} />
+                  
                   <div className="flex -space-x-3">
                     {[1, 2, 3].map((i) => (
                       <div

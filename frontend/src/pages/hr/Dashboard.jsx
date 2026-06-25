@@ -109,7 +109,9 @@ import {
 
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage, LanguageSelector } from '../../contexts/LanguageContext';
 const HRDashboard = () => {
+  const { t } = useLanguage();
       // State for New Job modal
       const [showCreateModal, setShowCreateModal] = useState(false);
     // Inline StatCard component for analytics cards
@@ -2178,43 +2180,57 @@ const HRDashboard = () => {
   const fetchAllData = async () => {
     setDataLoading(true);
     try {
-      // Fetch students from CSV data (prioritized)
-      try {
-        const csvRes = await studentAPI.getCsv();
-        const csvStudents = csvRes.data.students || [];
-        if (csvStudents.length > 0) {
-          // Map CSV data to match the component's expected format
-          const formattedStudents = csvStudents.map(csvStudent => ({
-            _id: csvStudent.studentId || csvStudent._id,
-            id: csvStudent.studentId || csvStudent._id,
-            name: csvStudent.name || `Student ${csvStudent.studentId}`,
-            email: csvStudent.email,
-            rollNumber: csvStudent.rollNumber || csvStudent.studentId || csvStudent._id,
-            age: csvStudent.age,
-            gender: csvStudent.gender,
-            degree: csvStudent.degree,
-            branch: csvStudent.branch,
-            cgpa: csvStudent.cgpa,
-            internships: csvStudent.internships,
-            projects: csvStudent.projects,
-            codingSkills: csvStudent.skills?.find(s => s.includes('Coding'))?.split(':')[1]?.trim() || 0,
-            communicationSkills: csvStudent.skills?.find(s => s.includes('Communication'))?.split(':')[1]?.trim() || 0,
-            softSkillsRating: csvStudent.skills?.find(s => s.includes('Soft Skills'))?.split(':')[1]?.trim() || 0,
-            aptitudeTestScore: csvStudent.skills?.find(s => s.includes('Aptitude'))?.split(':')[1]?.trim() || 0,
-            certifications: csvStudent.skills?.find(s => s.includes('Certifications'))?.split(':')[1]?.trim() || 0,
-            backlogs: csvStudent.backlogs || 0,
-            placementStatus: csvStudent.placementStatus,
-            skills: csvStudent.skills || [],
-            phone: csvStudent.email?.replace('@college.edu', '').replace('student', '+91 98765 ')
-          }));
-          setStudents(formattedStudents);
-        } else {
-          // Fallback to regular API
-          const studentsRes = await studentAPI.getAll();
-          setStudents(studentsRes.data.students || []);
+      const results = await Promise.allSettled([
+        studentAPI.getCsv(),
+        placementsAPI.getAll(),
+        onboardingAPI.getAll(),
+        jobAPI.getAll(),
+        applicationsAPI.getAll(),
+        jobRequisitionsAPI.getAll(),
+        placementStatsAPI.getAll(),
+        statsAPI.getHRStats()
+      ]);
+
+      // 1. Process Students CSV (index 0)
+      let studentsFetched = false;
+      const csvResult = results[0];
+      if (csvResult.status === 'fulfilled') {
+        try {
+          const csvStudents = csvResult.value.data.students || [];
+          if (csvStudents.length > 0) {
+            // Map CSV data to match the component's expected format
+            const formattedStudents = csvStudents.map(csvStudent => ({
+              _id: csvStudent.studentId || csvStudent._id,
+              id: csvStudent.studentId || csvStudent._id,
+              name: csvStudent.name || `Student ${csvStudent.studentId}`,
+              email: csvStudent.email,
+              rollNumber: csvStudent.rollNumber || csvStudent.studentId || csvStudent._id,
+              age: csvStudent.age,
+              gender: csvStudent.gender,
+              degree: csvStudent.degree,
+              branch: csvStudent.branch,
+              cgpa: csvStudent.cgpa,
+              internships: csvStudent.internships,
+              projects: csvStudent.projects,
+              codingSkills: csvStudent.skills?.find(s => s.includes('Coding'))?.split(':')[1]?.trim() || 0,
+              communicationSkills: csvStudent.skills?.find(s => s.includes('Communication'))?.split(':')[1]?.trim() || 0,
+              softSkillsRating: csvStudent.skills?.find(s => s.includes('Soft Skills'))?.split(':')[1]?.trim() || 0,
+              aptitudeTestScore: csvStudent.skills?.find(s => s.includes('Aptitude'))?.split(':')[1]?.trim() || 0,
+              certifications: csvStudent.skills?.find(s => s.includes('Certifications'))?.split(':')[1]?.trim() || 0,
+              backlogs: csvStudent.backlogs || 0,
+              placementStatus: csvStudent.placementStatus,
+              skills: csvStudent.skills || [],
+              phone: csvStudent.email?.replace('@college.edu', '').replace('student', '+91 98765 ')
+            }));
+            setStudents(formattedStudents);
+            studentsFetched = true;
+          }
+        } catch (e) {
+          console.warn('Error processing CSV students:', e);
         }
-      } catch (error) {
-        // Optionally show a UI error or ignore for silent failover
+      }
+
+      if (!studentsFetched) {
         try {
           const studentsRes = await studentAPI.getAll();
           setStudents(studentsRes.data.students || []);
@@ -2223,92 +2239,85 @@ const HRDashboard = () => {
         }
       }
 
-      // Fetch placements
-      try {
-        const placementsRes = await placementsAPI.getAll();
-        const placementItems = placementsRes.data.placements || [];
+      // 2. Process Placements (index 1)
+      const placementsResult = results[1];
+      if (placementsResult.status === 'fulfilled') {
+        const placementItems = placementsResult.value.data.placements || [];
         setPlacements(placementItems);
         setOffers(mapPlacementsToOffers(placementItems));
-      } catch (error) {
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      } else {
+        if (placementsResult.reason.response && (placementsResult.reason.response.status === 401 || placementsResult.reason.response.status === 403)) {
           logout();
           navigate('/login');
           return;
         }
-        // Optionally show a UI error or ignore for silent failover
       }
 
-      // Fetch onboarding
-      try {
-        const onboardingRes = await onboardingAPI.getAll();
-        setOnboardingTasks(onboardingRes.data.onboarding || []);
-      } catch (error) {
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // 3. Process Onboarding (index 2)
+      const onboardingResult = results[2];
+      if (onboardingResult.status === 'fulfilled') {
+        setOnboardingTasks(onboardingResult.value.data.onboarding || []);
+      } else {
+        if (onboardingResult.reason.response && (onboardingResult.reason.response.status === 401 || onboardingResult.reason.response.status === 403)) {
           logout();
           navigate('/login');
           return;
         }
-        // Optionally show a UI error or ignore for silent failover
       }
 
-      // Fetch jobs
-      try {
-        const jobsRes = await jobAPI.getAll();
-        setJobs(jobsRes.data.jobs || []);
-      } catch (error) {
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // 4. Process Jobs (index 3)
+      const jobsResult = results[3];
+      if (jobsResult.status === 'fulfilled') {
+        setJobs(jobsResult.value.data.jobs || []);
+      } else {
+        if (jobsResult.reason.response && (jobsResult.reason.response.status === 401 || jobsResult.reason.response.status === 403)) {
           logout();
           navigate('/login');
           return;
         }
-        // Optionally show a UI error or ignore for silent failover
       }
 
-      // Fetch applications
-      try {
-        const applicationsRes = await applicationsAPI.getAll();
-        setApplications(applicationsRes.data.applications || []);
-      } catch (error) {
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // 5. Process Applications (index 4)
+      const applicationsResult = results[4];
+      if (applicationsResult.status === 'fulfilled') {
+        setApplications(applicationsResult.value.data.applications || []);
+      } else {
+        if (applicationsResult.reason.response && (applicationsResult.reason.response.status === 401 || applicationsResult.reason.response.status === 403)) {
           logout();
           navigate('/login');
           return;
         }
-        // Optionally show a UI error or ignore for silent failover
       }
 
-      // Fetch job requisitions
-      try {
-        const reqsRes = await jobRequisitionsAPI.getAll();
-        setJobRequisitions(reqsRes.data.jobRequisitions || []);
-      } catch (error) {
-        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // 6. Process Job Requisitions (index 5)
+      const reqsResult = results[5];
+      if (reqsResult.status === 'fulfilled') {
+        setJobRequisitions(reqsResult.value.data.jobRequisitions || []);
+      } else {
+        if (reqsResult.reason.response && (reqsResult.reason.response.status === 401 || reqsResult.reason.response.status === 403)) {
           logout();
           navigate('/login');
           return;
         }
-        // Optionally show a UI error or ignore for silent failover
       }
 
-      // Fetch placement statistics (Kaggle data)
-      try {
-        const statsRes = await placementStatsAPI.getAll();
+      // 7. Process Placement Stats (index 6)
+      const placementStatsResult = results[6];
+      if (placementStatsResult.status === 'fulfilled') {
+        const statsRes = placementStatsResult.value;
         if (statsRes.data && statsRes.data.placements) {
           setPlacementStats(statsRes.data);
         }
-      } catch (error) {
-        // Optionally show a UI error or ignore for silent failover
       }
 
-      // Fetch HR stats
-      try {
-        const statsRes = await statsAPI.getHRStats();
-        setDashboardStats(statsRes.data || null);
-      } catch (error) {
-        // Optionally show a UI error or ignore for silent failover
+      // 8. Process HR Stats (index 7)
+      const hrStatsResult = results[7];
+      if (hrStatsResult.status === 'fulfilled') {
+        setDashboardStats(hrStatsResult.value.data || null);
       }
+
     } catch (error) {
-      // Optionally show a UI error or ignore for silent failover
+      // ignore
     } finally {
       setDataLoading(false);
     }
@@ -6337,96 +6346,96 @@ Generated by HR Dashboard - Placement Management System`;
             <button
               className={navItemClass(currentView === 'overview')}
               onClick={() => setCurrentView('overview')}
-              title="Overview"
+              title={t('overview')}
             >
-              <LayoutDashboard className="h-5 w-5" /> {isSidebarOpen && 'Overview'}
+              <LayoutDashboard className="h-5 w-5" /> {isSidebarOpen && t('overview')}
             </button>
             <button
               className={navItemClass(currentView === 'jobs')}
               onClick={() => setCurrentView('jobs')}
-              title="Jobs & Reqs"
+              title={t('jobsAndReqs')}
             >
-              <Briefcase className="h-5 w-5" /> {isSidebarOpen && 'Jobs & Reqs'}
+              <Briefcase className="h-5 w-5" /> {isSidebarOpen && t('jobsAndReqs')}
             </button>
             <button
               className={navItemClass(currentView === 'talent')}
               onClick={() => setCurrentView('talent')}
-              title="Talent Pool"
+              title={t('talentPool')}
             >
-              <Users className="h-5 w-5" /> {isSidebarOpen && 'Talent Pool'}
+              <Users className="h-5 w-5" /> {isSidebarOpen && t('talentPool')}
             </button>
             <button
               className={navItemClass(currentView === 'interviews')}
               onClick={() => setCurrentView('interviews')}
-              title="Interviews"
+              title={t('interviews')}
             >
-              <Users2 className="h-5 w-5" /> {isSidebarOpen && 'Interviews'}
+              <Users2 className="h-5 w-5" /> {isSidebarOpen && t('interviews')}
             </button>
             <button
               className={navItemClass(currentView === 'offers')}
               onClick={() => setCurrentView('offers')}
-              title="Offers"
+              title={t('offers')}
             >
-              <CheckCircle className="h-5 w-5" /> {isSidebarOpen && 'Offers'}
+              <CheckCircle className="h-5 w-5" /> {isSidebarOpen && t('offers')}
             </button>
             <button
               className={navItemClass(currentView === 'onboarding')}
               onClick={() => setCurrentView('onboarding')}
-              title="Onboarding"
+              title={t('onboarding')}
             >
-              <Award className="h-5 w-5" /> {isSidebarOpen && 'Onboarding'}
+              <Award className="h-5 w-5" /> {isSidebarOpen && t('onboarding')}
             </button>
             <button
               className={navItemClass(currentView === 'applications')}
               onClick={() => setCurrentView('applications')}
-              title="Applications"
+              title={t('applications')}
             >
-              <FileText className="h-5 w-5" /> {isSidebarOpen && 'Applications'}
+              <FileText className="h-5 w-5" /> {isSidebarOpen && t('applications')}
             </button>
             <button
               className={navItemClass(currentView === 'smart-hiring')}
               onClick={() => setCurrentView('smart-hiring')}
-              title="GenAI Hiring Hub"
+              title={t('genaiHiringHub')}
             >
-              <Brain className="h-5 w-5" /> {isSidebarOpen && 'GenAI Hiring Hub'}
+              <Brain className="h-5 w-5" /> {isSidebarOpen && t('genaiHiringHub')}
             </button>
             <button
               className={navItemClass(currentView === 'analytics')}
               onClick={() => setCurrentView('analytics')}
               data-testid="analytics-sidebar-btn"
-              title="Analytics"
+              title={t('analytics')}
             >
-              <BarChart2 className="h-5 w-5" /> {isSidebarOpen && 'Analytics'}
+              <BarChart2 className="h-5 w-5" /> {isSidebarOpen && t('analytics')}
             </button>
             <button
               className={navItemClass(currentView === 'settings')}
               onClick={() => setCurrentView('settings')}
-              title="Settings"
+              title={t('settings')}
             >
-              <Settings className="h-5 w-5" /> {isSidebarOpen && 'Settings'}
+              <Settings className="h-5 w-5" /> {isSidebarOpen && t('settings')}
             </button>
             <button
               className={navItemClass(currentView === 'profile')}
               onClick={() => setCurrentView('profile')}
-              title="Profile"
+              title={t('profile')}
             >
-              <User className="h-5 w-5" /> {isSidebarOpen && 'Profile'}
+              <User className="h-5 w-5" /> {isSidebarOpen && t('profile')}
             </button>
             <button
               className={navItemClass(currentView === 'exam-desk')}
               onClick={() => setCurrentView('exam-desk')}
-              title="Exam Desk"
+              title={t('examDesk')}
             >
-              <Award className="h-5 w-5" /> {isSidebarOpen && 'Exam Desk'}
+              <Award className="h-5 w-5" /> {isSidebarOpen && t('examDesk')}
             </button>
           </nav>
           <div className="px-2 pb-6 pt-2 border-t border-white/10">
             <button
               className={`w-full flex items-center ${isSidebarOpen ? 'gap-3 px-6 justify-start' : 'justify-center px-2'} py-3 rounded-xl font-semibold transition-all text-left hover:bg-red-600/80 text-white/90`}
               onClick={handleManualLogout}
-              title="Sign Out"
+              title={t('signOut')}
             >
-              <LogOut className="h-5 w-5" /> {isSidebarOpen && 'Sign Out'}
+              <LogOut className="h-5 w-5" /> {isSidebarOpen && t('signOut')}
             </button>
           </div>
         </aside>
@@ -6439,10 +6448,19 @@ Generated by HR Dashboard - Placement Management System`;
               <Layers className="h-6 w-6" />
             </button>
             <div>
-              <h1 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>HR Dashboard</h1>
-              <div className={`text-base font-semibold capitalize mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>{currentView.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+              <h1 className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('dashboard')} (HR)</h1>
+              <div className={`text-base font-semibold capitalize mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                {currentView === 'jobs' ? t('jobsAndReqs') :
+                 currentView === 'talent' ? t('talentPool') :
+                 currentView === 'smart-hiring' ? t('genaiHiringHub') :
+                 currentView === 'exam-desk' ? t('examDesk') :
+                 t(currentView)}
+              </div>
             </div>
             <div className="flex items-center gap-4">
+              {/* Language Selector */}
+              <LanguageSelector currentColors={{ input: isDark ? "#1e293b" : "#f1f5f9", border: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)", text: isDark ? "#ffffff" : "#0f172a" }} />
+              
               {/* Notifications Bell */}
               <div className="relative">
                 <button 

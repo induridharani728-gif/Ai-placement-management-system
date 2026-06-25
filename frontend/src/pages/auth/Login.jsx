@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { authAPI, oauthAPI } from "../../services/api";
+import { useLanguage, LanguageSelector } from "../../contexts/LanguageContext";
 import { BACKEND_BASE_URL } from "../../config/apiBase";
 import {
   Sun,
@@ -44,9 +45,102 @@ const roleImages = {
   recruiter: "https://img.freepik.com/premium-photo/3d-realistic-rendering-human-resources-management-concept-hr-recruiter-selecting-best-candidates_1020697-12345.jpg"
 };
 
+const roleConfig = {
+  student: {
+    name: "Candidate",
+    gradient: "from-cyan-500 to-blue-600",
+    glow: "shadow-[0_0_40px_rgba(6,182,212,0.45)] border-cyan-500/50",
+    textColorDark: "text-cyan-400",
+    textColorLight: "text-cyan-600",
+    focusBorder: "focus:border-cyan-500",
+    buttonBg: "bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-cyan-500/20",
+    loginQuote: {
+      heading: "WELCOME BACK!",
+      text: "Your dream career is just a login away. Connect with top employers and unlock endless possibilities.",
+    },
+    registerQuote: {
+      heading: "JOIN US TODAY!",
+      text: "Take the first step toward your professional future. Build your profile and get noticed by global brands.",
+    }
+  },
+  staff: {
+    name: "Staff",
+    gradient: "from-emerald-500 to-teal-600",
+    glow: "shadow-[0_0_40px_rgba(16,185,129,0.45)] border-emerald-500/50",
+    textColorDark: "text-emerald-400",
+    textColorLight: "text-emerald-600",
+    focusBorder: "focus:border-emerald-500",
+    buttonBg: "bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-emerald-500/20",
+    loginQuote: {
+      heading: "WELCOME BACK, MENTOR!",
+      text: "Guiding students to success requires vision and dedication. Thank you for shaping the leaders of tomorrow.",
+    },
+    registerQuote: {
+      heading: "BECOME A SHAPER!",
+      text: "Register to manage departmental drives, evaluate student progress, and drive career placements forward.",
+    }
+  },
+  hr: {
+    name: "HR",
+    gradient: "from-rose-500 to-orange-600",
+    glow: "shadow-[0_0_40px_rgba(244,63,94,0.45)] border-rose-500/50",
+    textColorDark: "text-rose-400",
+    textColorLight: "text-rose-600",
+    focusBorder: "focus:border-rose-500",
+    buttonBg: "bg-gradient-to-r from-rose-500 to-orange-600 hover:shadow-rose-500/20",
+    loginQuote: {
+      heading: "WELCOME BACK, PARTNER!",
+      text: "Exceptional teams are built here. Log in to find the perfect candidates for your organization's future.",
+    },
+    registerQuote: {
+      heading: "BUILD YOUR DREAM TEAM!",
+      text: "Partner with us to gain exclusive access to a pool of highly skilled candidates ready to make an impact.",
+    }
+  },
+  admin: {
+    name: "Admin",
+    gradient: "from-orange-500 to-red-600",
+    glow: "shadow-[0_0_40px_rgba(249,115,22,0.55)] border-orange-500/50",
+    textColorDark: "text-orange-400",
+    textColorLight: "text-orange-600",
+    focusBorder: "focus:border-orange-500",
+    buttonBg: "bg-gradient-to-r from-orange-500 to-red-600 hover:shadow-orange-500/20",
+    loginQuote: {
+      heading: "SYSTEM CONTROL",
+      text: "Oversee operations, manage integrations, and keep the placement machine running smoothly and securely.",
+    },
+    registerQuote: {
+      heading: "ADMIN REGISTRATION",
+      text: "Create an administrator account to configure system properties, manage databases, and handle settings.",
+    }
+  },
+  recruiter: {
+    name: "Recruiter",
+    gradient: "from-indigo-500 to-violet-600",
+    glow: "shadow-[0_0_40px_rgba(99,102,241,0.45)] border-indigo-500/50",
+    textColorDark: "text-indigo-400",
+    textColorLight: "text-indigo-600",
+    focusBorder: "focus:border-indigo-500",
+    buttonBg: "bg-gradient-to-r from-indigo-500 to-violet-600 hover:shadow-indigo-500/20",
+    loginQuote: {
+      heading: "WELCOME BACK, PARTNER!",
+      text: "Exceptional teams are built here. Log in to find the perfect candidates for your organization's future.",
+    },
+    registerQuote: {
+      heading: "BUILD YOUR DREAM TEAM!",
+      text: "Partner with us to gain exclusive access to a pool of highly skilled candidates ready to make an impact.",
+    }
+  }
+};
+
 export default function Login() {
+  const { t } = useLanguage();
   const backendBaseUrl = BACKEND_BASE_URL;
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get("role");
+    return ["student", "staff", "hr", "admin"].includes(roleParam) ? roleParam : "student";
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -77,11 +171,19 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const highContrastInputStyle = {
-    WebkitTextFillColor: "#ffffff",
-    WebkitBoxShadow: "0 0 0 1000px rgba(15, 23, 42, 0.92) inset",
-    caretColor: "#ffffff",
-  };
+  const highContrastInputStyle = darkMode
+    ? {
+        WebkitTextFillColor: "#ffffff",
+        WebkitBoxShadow: "0 0 0 1000px #0b0f19 inset",
+        caretColor: "#ffffff",
+        color: "#ffffff",
+      }
+    : {
+        WebkitTextFillColor: "#0f172a",
+        WebkitBoxShadow: "0 0 0 1000px #ffffff inset",
+        caretColor: "#0f172a",
+        color: "#0f172a",
+      };
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -568,8 +670,8 @@ export default function Login() {
             <div className="flex items-start gap-4">
               <Phone className="text-blue-600 mt-1" size={24} />
               <div>
-                <h5 className="font-semibold mb-1">Phone Support</h5>
-                <p className="text-gray-600 dark:text-gray-300">
+                <h5 className={`font-semibold mb-1 ${darkMode ? "text-white" : "text-slate-900"}`}>Phone Support</h5>
+                <p className={darkMode ? "text-slate-200" : "text-slate-700"}>
                   +91-6301231575 <br /> Available: Mon-Fri, 9 AM - 6 PM IST
                 </p>
               </div>
@@ -577,8 +679,8 @@ export default function Login() {
             <div className="flex items-start gap-4">
               <Mail className="text-emerald-600 mt-1" size={24} />
               <div>
-                <h5 className="font-semibold mb-1">Email Support</h5>
-                <p className="text-gray-600 dark:text-gray-300">
+                <h5 className={`font-semibold mb-1 ${darkMode ? "text-white" : "text-slate-900"}`}>Email Support</h5>
+                <p className={darkMode ? "text-slate-200" : "text-slate-700"}>
                   vamsivalluri52@gmail.com <br /> Response time: Within 2 hours
                 </p>
               </div>
@@ -586,18 +688,18 @@ export default function Login() {
             <div className="flex items-start gap-4">
               <MapPin className="text-rose-600 mt-1" size={24} />
               <div>
-                <h5 className="font-semibold mb-1">Office Location</h5>
-                <p className="text-gray-600 dark:text-gray-300">
+                <h5 className={`font-semibold mb-1 ${darkMode ? "text-white" : "text-slate-900"}`}>Office Location</h5>
+                <p className={darkMode ? "text-slate-200" : "text-slate-700"}>
                   Generative AI Placement System HQ <br /> Vāghodia, Gujarat, India - 390019
                 </p>
               </div>
             </div>
-            <div className="bg-blue-50 dark:bg-slate-700 p-4 rounded-lg border border-blue-200 dark:border-slate-600">
-              <h5 className="font-semibold mb-2 flex items-center gap-2">
+            <div className={`p-4 rounded-lg border ${darkMode ? "bg-slate-700/50 border-slate-600" : "bg-blue-50 border-blue-200"}`}>
+              <h5 className={`font-semibold mb-2 flex items-center gap-2 ${darkMode ? "text-white" : "text-blue-700"}`}>
                 <Clock size={18} className="text-blue-600" />
                 Business Hours
               </h5>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className={`text-sm ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
                 Monday - Friday: 9:00 AM - 6:00 PM IST <br /> Saturday:
                 10:00 AM - 4:00 PM IST <br /> Sunday: Closed
               </p>
@@ -753,19 +855,19 @@ export default function Login() {
               onClick={() => setActiveModal("about")}
               className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              <Info size={16} /> About
+              <Info size={16} /> {t('ourMission') || 'About'}
             </button>
             <button
               onClick={() => setActiveModal("placements")}
               className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              <Briefcase size={16} /> Placements
+              <Briefcase size={16} /> {t('totalPlacements') || 'Placements'}
             </button>
             <button
               onClick={() => setActiveModal("contact")}
               className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              <Phone size={16} /> Contact
+              <Phone size={16} /> {t('contactSupport') || 'Contact'}
             </button>
             <div className="group relative cursor-pointer flex items-center gap-1 text-slate-800 dark:text-slate-100">
               <span className="font-bold text-blue-700 dark:text-yellow-300 drop-shadow-lg">More</span> <ChevronDown size={14} />
@@ -784,7 +886,7 @@ export default function Login() {
                     }}
                     className="w-full text-left px-4 py-2 text-white dark:text-blue-300 font-bold hover:bg-blue-600 dark:hover:bg-blue-400 rounded-lg" style={{textShadow:'0 1px 4px #000'}}
                   >
-                    More Info
+                    Overview
                   </button>
                   <button
                     type="button"
@@ -821,35 +923,32 @@ export default function Login() {
             </div>
           </div>
 
-          <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-full transition-all ${
-              darkMode ? "bg-slate-800 text-yellow-400" : "bg-slate-800 text-yellow-300"
-            }`}
-          >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
+          <div className="flex items-center gap-4">
+            <LanguageSelector currentColors={{ input: darkMode ? "#1e293b" : "#f1f5f9", border: darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)", text: darkMode ? "#ffffff" : "#0f172a" }} />
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-full transition-all ${
+                darkMode ? "bg-slate-800 text-yellow-400" : "bg-slate-800 text-yellow-300"
+              }`}
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* LOGIN BOX UI */}
       <div className="flex items-center justify-center p-4 md:p-10 pt-24 relative z-10">
         <div
-          className={`flex flex-col md:flex-row w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl min-h-[650px] transition-all duration-500 ${
+          className={`flex flex-col md:flex-row w-full max-w-6xl rounded-3xl overflow-hidden min-h-[650px] transition-all duration-500 ${
             darkMode
-              ? "bg-slate-900/80 backdrop-blur-xl border border-white/10"
-              : "bg-white backdrop-blur-xl border border-gray-200"
-          }`}
+              ? "bg-[#0b0f19] border border-white/10"
+              : "bg-white border border-gray-200"
+          } ${roleConfig[role]?.glow || "shadow-2xl"}`}
         >
-          <div
-            className={`w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center transition-all duration-700 ${
-              darkMode
-                ? "bg-slate-900/80"
-                : "bg-white"
-            }`}
-          >
+          <div className="w-full md:w-[55%] p-8 md:p-14 flex flex-col justify-center transition-all duration-700 bg-transparent">
             <div className="flex justify-center mb-6">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-2xl overflow-hidden border border-black/10 dark:border-white/15 shadow-xl bg-black">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden border border-black/10 dark:border-white/15 shadow-xl bg-black">
                 <img
                   src="https://static.vecteezy.com/system/resources/previews/009/634/721/non_2x/vrd-letter-logo-design-with-polygon-shape-vrd-polygon-and-cube-shape-logo-design-vrd-hexagon-logo-template-white-and-black-colors-vrd-monogram-business-and-real-estate-logo-vector.jpg"
                   alt="VRD logo"
@@ -860,15 +959,14 @@ export default function Login() {
 
             <div className="text-center mb-10">
               <h1 className={`text-4xl font-bold tracking-widest ${darkMode ? "text-white" : "text-gray-900"}`}>
-                LOGIN
+                {t('login')}
               </h1>
               <p
-                className={`mt-3 text-sm uppercase font-semibold ${darkMode ? "text-blue-200" : "text-gray-900"}`}
+                className={`mt-3 text-sm uppercase font-semibold tracking-wider ${darkMode ? "text-slate-100" : "text-slate-800"}`}
               >
-                {role.charAt(0).toUpperCase() + role.slice(1)} Authentication
+                {roleConfig[role]?.name || role.charAt(0).toUpperCase() + role.slice(1)} Portal
               </p>
-              <div className="mt-2 h-1 w-16 bg-gradient-to-r from-blue-500 to-emerald-500 mx-auto rounded-full" />
-                          <div className={`mt-2 h-1 w-16 bg-gradient-to-r mx-auto rounded-full ${darkMode ? "from-blue-500 to-emerald-500" : "from-blue-400 to-emerald-400"}`} />
+              <div className={`mt-3 h-1 w-16 bg-gradient-to-r ${roleConfig[role]?.gradient} mx-auto rounded-full`} />
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -880,95 +978,121 @@ export default function Login() {
               )}
               
               <div className="relative">
-                <label className={`block text-xs font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}> 
+                <label className={`block text-xs uppercase tracking-wider font-bold mb-1.5 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                   Select Role
                 </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  style={highContrastInputStyle}
-                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl outline-none transition-all appearance-none font-medium ${darkMode ? 'bg-slate-800/90 text-white border-slate-500' : 'bg-white text-gray-900 border-gray-300'}`}
-                >
-                  <option value="student">Student</option>
-                  <option value="staff">Staff</option>
-                  <option value="hr">HR</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <Info size={18} />
+                <div className="relative">
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    style={highContrastInputStyle}
+                    className={`w-full py-2 bg-transparent border-0 border-b-2 outline-none transition-all font-medium appearance-none ${
+                      darkMode 
+                        ? 'text-white border-slate-700' 
+                        : 'text-gray-900 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                  >
+                    <option value="student" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', color: darkMode ? '#ffffff' : '#0f172a' }}>Student (Candidate)</option>
+                    <option value="staff" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', color: darkMode ? '#ffffff' : '#0f172a' }}>Staff</option>
+                    <option value="hr" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', color: darkMode ? '#ffffff' : '#0f172a' }}>HR</option>
+                    <option value="admin" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', color: darkMode ? '#ffffff' : '#0f172a' }}>Admin</option>
+                  </select>
+                  <div className={`absolute right-2 top-3 pointer-events-none ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <ChevronDown size={18} />
+                  </div>
                 </div>
               </div>
 
               <div className="relative">
-                <label className={`block text-xs font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}> 
+                <label className={`block text-xs uppercase tracking-wider font-bold mb-1.5 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                   Email Address
                 </label>
-                <input
-                  type="email"
-                  placeholder="your.email@example.com"
-                  style={highContrastInputStyle}
-                  className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl outline-none transition-all ${darkMode ? 'bg-slate-900/90 text-white placeholder:text-slate-300 border-slate-500' : 'bg-white text-gray-900 placeholder:text-gray-400 border-gray-300'}`}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <Mail size={18} />
+                <div className="relative">
+                  <input
+                    type="email"
+                    placeholder="your.email@example.com"
+                    style={highContrastInputStyle}
+                    className={`w-full pr-10 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                      darkMode 
+                        ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                        : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                  <div className={`absolute right-2 top-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Mail size={18} />
+                  </div>
                 </div>
               </div>
 
               <div className="relative">
-                <label className={`block text-xs font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}> 
+                <label className={`block text-xs uppercase tracking-wider font-bold mb-1.5 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                   Password
                 </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••••••"
-                  style={highContrastInputStyle}
-                  className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl outline-none transition-all ${darkMode ? 'bg-slate-800/90 text-white placeholder:text-slate-300 border-slate-500' : 'bg-white text-gray-900 placeholder:text-gray-400 border-gray-300'}`}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <div className="absolute left-3 top-9 text-slate-200">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••••••"
+                    style={highContrastInputStyle}
+                    className={`w-full pr-16 py-2 bg-transparent border-0 border-b-2 outline-none transition-all ${
+                      darkMode 
+                        ? 'text-white placeholder:text-slate-400 border-slate-700' 
+                        : 'text-gray-900 placeholder:text-slate-500 border-gray-300'
+                    } ${roleConfig[role]?.focusBorder || 'focus:border-blue-500'}`}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <div className="absolute right-2 top-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className={`text-xs font-bold hover:text-slate-200 transition-colors uppercase ${
+                        darkMode ? 'text-slate-300' : 'text-slate-700'
+                      }`}
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                    <span className={darkMode ? 'text-slate-400' : 'text-slate-500'}>|</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={`h-5 w-5 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-9 text-xs font-semibold text-slate-200"
-                >
-                  {showPassword ? "HIDE" : "SHOW"}
-                </button>
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <label className={`flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}> 
+                <label className={`flex items-center gap-2 cursor-pointer font-medium ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}> 
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded"
+                    className={`w-4 h-4 rounded border-slate-700 bg-transparent ${
+                      role === 'student' ? 'text-cyan-500 focus:ring-cyan-500/30' :
+                      role === 'staff' ? 'text-emerald-500 focus:ring-emerald-500/30' :
+                      role === 'hr' ? 'text-rose-500 focus:ring-rose-500/30' :
+                      'text-orange-500 focus:ring-orange-500/30'
+                    }`}
                   />
                   Remember me
                 </label>
                 <button
                   type="button"
                   onClick={openForgotModal}
-                  className="text-blue-400 font-bold" style={{textShadow:'0 1px 4px #000'}}
+                  className={`font-semibold hover:underline transition-all ${darkMode ? roleConfig[role]?.textColorDark : roleConfig[role]?.textColorLight}`}
                 >
                   Forgot Password?
                 </button>
@@ -977,7 +1101,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full py-3 ${backgrounds[role]} text-white font-bold rounded-xl shadow-lg hover:brightness-110 transition-all transform active:scale-[0.98] mt-6 uppercase tracking-wide ${
+                className={`w-full py-3.5 ${roleConfig[role]?.buttonBg} text-white font-bold rounded-xl shadow-lg transition-all duration-300 transform active:scale-[0.98] mt-6 uppercase tracking-wider text-sm hover:brightness-110 active:brightness-95 ${
                   loading ? "opacity-75 cursor-not-allowed" : ""
                 }`}
               >
@@ -989,8 +1113,8 @@ export default function Login() {
                 <div className="absolute inset-0 flex items-center">
                   <div className={`w-full h-px ${darkMode ? 'bg-slate-700' : 'bg-gray-300'}`}></div>
                 </div>
-                <div className={`relative flex justify-center text-sm ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
-                  <span className={`px-2 ${darkMode ? 'text-slate-200' : 'text-gray-700'}`}>Or continue with</span>
+                <div className={`relative flex justify-center text-sm ${darkMode ? 'bg-[#0b0f19]' : 'bg-white'}`}>
+                  <span className={`px-2 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>Or continue with</span>
                 </div>
               </div>
 
@@ -1017,55 +1141,57 @@ export default function Login() {
               </div>
             </form>
 
-            <p className={`mt-5 text-sm text-center font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}> 
+            <p className={`mt-6 text-sm text-center font-semibold ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}> 
               Don't have an account?
-                <Link
-                  to="/register"
-                  className="text-blue-400 ml-1 font-bold hover:underline" style={{textShadow:'0 1px 4px #000'}}
+              <Link
+                to={`/register?role=${role}`}
+                className={`ml-1 font-bold hover:underline transition-all ${darkMode ? roleConfig[role]?.textColorDark : roleConfig[role]?.textColorLight}`}
               >
                 Register Now
               </Link>
             </p>
 
             <div
-              className={`mt-6 p-4 rounded-xl border-2 ${
+              className={`mt-6 p-4 rounded-2xl border transition-all duration-500 ${
                 darkMode
-                  ? "border-slate-700 bg-slate-900/40"
-                  : "bg-gray-50 border-blue-200"
+                  ? "border-white/10 bg-white/5"
+                  : "bg-slate-50 border-slate-200"
               }`}
             >
-              <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-1">
-                <CheckCircle size={14} /> <span className="text-blue-700 dark:text-blue-200">Placement Pulse</span>
+              <p className={`text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${darkMode ? roleConfig[role]?.textColorDark : roleConfig[role]?.textColorLight}`}>
+                <CheckCircle size={14} /> <span>Placement Pulse</span>
               </p>
-              <p 
-                className="text-lg font-bold italic leading-snug text-white dark:text-blue-300" 
-                style={{textShadow:'0 2px 8px #0a0a0a, 0 1px 4px #000'}}>
+              <p className={`text-sm font-medium leading-relaxed italic ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>
                 25 new job roles added today for the upcoming tech-hiring drive.
               </p>
             </div>
           </div>
 
-          {/* RIGHT SIDE (Role-Specific Image) */}
+          {/* RIGHT SIDE (Role-Specific Quotation Panel) */}
           <div
-            className={`hidden md:flex md:w-1/2 ${backgrounds[role]} relative items-center justify-center p-12 transition-colors duration-700 overflow-hidden`}
+            className={`hidden md:flex md:w-[45%] bg-gradient-to-br ${roleConfig[role]?.gradient || 'from-blue-600 to-indigo-700'} relative items-center justify-center p-12 transition-all duration-700`}
+            style={{ clipPath: 'polygon(15% 0, 100% 0, 100% 100%, 0% 100%)' }}
           >
-            <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-10 right-10 w-32 h-32 bg-black/10 rounded-full blur-3xl" />
+            {/* Glowing backdrop decorative blobs */}
+            <div className="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse" />
+            <div className="absolute bottom-10 left-10 w-24 h-24 bg-black/15 rounded-full blur-xl" />
 
-            <div className="relative z-10 text-center w-full flex flex-col items-center gap-6">
-              <div className="w-72 h-80 rounded-xl overflow-hidden shadow-2xl">
-                <img 
-                  src={roleImages[role]} 
-                  alt={`${role} role`}
-                  className="w-full h-full object-cover"
-                />
+            <div className="relative z-10 text-center text-white max-w-sm mx-auto flex flex-col gap-6">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg">
+                  {role === 'student' ? <Briefcase size={28} /> :
+                   role === 'staff' ? <Users size={28} /> :
+                   role === 'hr' ? <Award size={28} /> :
+                   <Target size={28} />}
+                </div>
               </div>
-              <div className="text-white">
-                <h2 className="text-3xl font-bold uppercase tracking-widest">
-                  {role} Portal
+              <div>
+                <h2 className="text-3xl font-extrabold uppercase tracking-widest text-shadow-md">
+                  {roleConfig[role]?.loginQuote?.heading}
                 </h2>
-                <p className="mt-4 text-sm opacity-90 max-w-xs mx-auto">
-                  Welcome to Generative AI Placement System. Your success is our mission.
+                <div className="mt-3 h-0.5 w-12 bg-white/50 mx-auto rounded-full" />
+                <p className="mt-6 text-sm font-medium leading-relaxed opacity-90">
+                  {roleConfig[role]?.loginQuote?.text}
                 </p>
               </div>
             </div>

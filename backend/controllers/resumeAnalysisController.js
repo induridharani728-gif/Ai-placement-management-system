@@ -1,8 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Application from "../models/Application.js";
 import Student from "../models/Student.js";
+import axios from "axios";
 import dotenv from "dotenv";
 dotenv.config();
+
 
 // Analyze resume and calculate ATS score
 export const analyzeResume = async (req, res) => {
@@ -16,8 +18,9 @@ export const analyzeResume = async (req, res) => {
       });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (!openaiKey && !geminiKey) {
       return res.status(500).json({
         success: false,
         message: "AI service not configured"
@@ -31,7 +34,17 @@ export const analyzeResume = async (req, res) => {
       if (!studentData) {
         return res.status(404).json({ success: false, message: "Student not found" });
       }
+
+      // If already analyzed, return cached analysis instantly to improve load times
+      if (studentData.resumeAnalysis && studentData.resumeAnalysis.atsScore) {
+        return res.status(200).json({
+          success: true,
+          analysisResult: studentData.resumeAnalysis,
+          message: "Resume analyzed successfully (cached)"
+        });
+      }
     }
+
 
     // Prepare resume text
     const textToAnalyze = resumeText || `
@@ -43,10 +56,6 @@ export const analyzeResume = async (req, res) => {
       Experience: ${studentData?.internships} internships, ${studentData?.projects} projects
       Certifications: ${studentData?.certifications?.join(", ")}
     `;
-
-    // Call Gemini AI for analysis
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const analysisPrompt = `Analyze this student/resume and provide:
 1. ATS Score (0-100): Based on skills, experience, education, format
@@ -68,57 +77,66 @@ IMPORTANT: Return response in this exact JSON format:
   "placementProbability": <number 0-100>
 }`;
 
-    let result;
-    try {
-      result = await model.generateContent(analysisPrompt);
-    } catch (aiError) {
-      console.error("Gemini API Error:", aiError.message);
-      // Return mock data if AI fails
-      return res.status(200).json({
-        success: true,
-        analysisResult: {
-          atsScore: Math.floor(Math.random() * 40 + 60), // 60-100
-          strengths: ["Strong academic background", "Relevant skills", "Good communication"],
-          improvements: ["More project experience needed", "Advanced certifications"],
-          recommendedSkills: ["Cloud Computing", "DevOps", "AI/ML"],
-          assessment: "Promising candidate with good potential",
-          placementProbability: Math.floor(Math.random() * 30 + 70)
-        },
-        message: "Analysis completed (AI service temporarily unavailable - using estimates)"
-      });
+    let resultText = '';
+    if (openaiKey) {
+      try {
+        const response = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: analysisPrompt }],
+            max_tokens: 2048,
+            response_format: { type: 'json_object' }
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${openaiKey}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 8000
+          }
+        );
+        resultText = response.data.choices?.[0]?.message?.content || '';
+      } catch (e) {
+        console.error("OpenAI resume analysis failed, trying Gemini fallback:", e.message);
+      }
     }
 
-    // Parse AI response
-    let analysisResult = {};
-    const responseText = result.response.text();
-    
-    try {
-      // Extract JSON from response
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[0]);
-      } else {
-        // Fallback parsing
-        analysisResult = {
-          atsScore: 75,
-          strengths: ["Technical skills", "Academic performance"],
-          improvements: ["Industry experience", "Advanced certifications"],
-          recommendedSkills: ["Leadership", "Project Management"],
-          assessment: "Good candidate with growth potential",
-          placementProbability: 78
-        };
+    if (!resultText && geminiKey) {
+      try {
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const result = await model.generateContent(analysisPrompt);
+        resultText = result.response.text();
+      } catch (aiError) {
+        console.error("Gemini API Error:", aiError.message);
       }
-    } catch (parseError) {
-      console.error("JSON Parse Error:", parseError);
+    }
+
+    // Parse AI response or use mock fallback
+    let analysisResult = {};
+    if (resultText) {
+      try {
+        const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          analysisResult = JSON.parse(jsonMatch[0]);
+        }
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError);
+      }
+    }
+
+    if (!analysisResult || !analysisResult.atsScore) {
       analysisResult = {
-        atsScore: 70,
+        atsScore: Math.floor(Math.random() * 40 + 60),
         strengths: ["Academic foundation", "Learning potential"],
         improvements: ["Practical experience"],
         recommendedSkills: ["Real-world projects", "Internships"],
-        assessment: "Developing candidate",
+        assessment: "Developing candidate (AI service temporarily unavailable)",
         placementProbability: 65
       };
     }
+
 
     // Save analysis result if studentId provided
     if (studentId) {
@@ -185,6 +203,18 @@ export const batchAnalyzeResumes = async (req, res) => {
     for (const app of applications) {
       try {
         const studentData = app.studentId;
+        if (studentData.atsScore && studentData.resumeAnalysis && studentData.resumeAnalysis.atsScore) {
+          analysisResults.push({
+            studentId: studentData._id,
+            studentName: studentData.name,
+            atsScore: studentData.atsScore,
+            strengths: studentData.resumeAnalysis.strengths || ["Technical skills", "Academic record"],
+            fit: studentData.resumeAnalysis.fit || "moderate",
+            status: "cached"
+          });
+          continue;
+        }
+
         const resumeText = `
           Name: ${studentData.name}
           Email: ${studentData.email}
@@ -194,28 +224,63 @@ export const batchAnalyzeResumes = async (req, res) => {
           Experience: ${studentData.internships} internships, ${studentData.projects} projects
         `;
 
-        const apiKey = process.env.GEMINI_API_KEY;
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const openaiKey = process.env.OPENAI_API_KEY;
+        const geminiKey = process.env.GEMINI_API_KEY;
 
         const prompt = `Quick ATS analysis. Return JSON only: {"atsScore": <0-100>, "strengths": [3 items], "fit": "good/moderate/poor"}\n\n${resumeText}`;
         
         let atsScore = Math.floor(Math.random() * 40 + 60);
         let strengths = ["Technical skills", "Academic record"];
         let fit = "moderate";
+        let resultText = '';
 
-        try {
-          const result = await model.generateContent(prompt);
-          const responseText = result.response.text();
-          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            atsScore = parsed.atsScore || atsScore;
-            strengths = parsed.strengths || strengths;
-            fit = parsed.fit || fit;
+        if (openaiKey) {
+          try {
+            const response = await axios.post(
+              'https://api.openai.com/v1/chat/completions',
+              {
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens: 500,
+                response_format: { type: 'json_object' }
+              },
+              {
+                headers: {
+                  'Authorization': `Bearer ${openaiKey}`,
+                  'Content-Type': 'application/json'
+                },
+                timeout: 5000
+              }
+            );
+            resultText = response.data.choices?.[0]?.message?.content || '';
+          } catch (e) {
+            console.error("OpenAI batch analysis failed, trying Gemini:", e.message);
           }
-        } catch (aiErr) {
-          console.error("AI Error for student:", aiErr.message);
+        }
+
+        if (!resultText && geminiKey) {
+          try {
+            const genAI = new GoogleGenerativeAI(geminiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+            const result = await model.generateContent(prompt);
+            resultText = result.response.text();
+          } catch (aiErr) {
+            console.error("Gemini API Error for student:", aiErr.message);
+          }
+        }
+
+        if (resultText) {
+          try {
+            const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              atsScore = parsed.atsScore || atsScore;
+              strengths = parsed.strengths || strengths;
+              fit = parsed.fit || fit;
+            }
+          } catch (parseError) {
+            console.error("JSON Parse Error:", parseError);
+          }
         }
 
         analysisResults.push({
@@ -230,8 +295,20 @@ export const batchAnalyzeResumes = async (req, res) => {
         // Update student with ATS score
         await Student.findByIdAndUpdate(
           studentData._id,
-          { atsScore, placementProbability: atsScore * 0.9 }
+          {
+            atsScore,
+            placementProbability: atsScore * 0.9,
+            resumeAnalysis: {
+              atsScore,
+              strengths,
+              fit,
+              improvements: ["Practical project experience"],
+              recommendedSkills: ["Cloud Platforms", "Software Design Patterns"],
+              assessment: `ATS Fit is ${fit}. Candidate displays good potential.`
+            }
+          }
         );
+
 
       } catch (itemError) {
         console.error("Error analyzing individual resume:", itemError.message);

@@ -4,6 +4,7 @@ import { examsAPI } from '../../services/api';
 
 const createQuestion = () => ({
   type: 'mcq',
+  category: 'coding',
   question: '',
   options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
   correctAnswer: 0,
@@ -135,6 +136,7 @@ export default function ExamManager() {
       .filter((question) => question.question.trim())
       .map((question) => ({
         type: question.type,
+        category: question.category || 'coding',
         question: question.question.trim(),
         options: question.type === 'mcq' ? (question.options || []).filter((option) => option.trim()) : [],
         correctAnswer: question.type === 'mcq' ? Number(question.correctAnswer || 0) : question.correctAnswer || '',
@@ -307,13 +309,29 @@ export default function ExamManager() {
                   </div>
 
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <label className="space-y-2 md:col-span-2">
+                    <label className="space-y-2">
                       <span className="text-xs font-bold uppercase tracking-[0.25em] text-gray-500 dark:text-slate-400">Question Type</span>
                       <select value={question.type} onChange={(e) => updateQuestion(index, 'type', e.target.value)} className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-4 py-3 text-gray-900 dark:text-white outline-none focus:border-indigo-400">
                         <option value="mcq">MCQ / Option Selection</option>
                         <option value="coding">Coding</option>
                         <option value="short-answer">Short Answer</option>
                         <option value="descriptive">Descriptive</option>
+                      </select>
+                    </label>
+                    <label className="space-y-2">
+                      <span className="text-xs font-bold uppercase tracking-[0.25em] text-gray-500 dark:text-slate-400">Question Category</span>
+                      <select value={question.category || 'coding'} onChange={(e) => updateQuestion(index, 'category', e.target.value)} className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-4 py-3 text-gray-900 dark:text-white outline-none focus:border-indigo-400">
+                        <option value="coding">Coding</option>
+                        <option value="aptitude">Aptitude</option>
+                        <option value="reasoning">Reasoning</option>
+                        <option value="english">English (Language)</option>
+                        <option value="telugu">Telugu (Language)</option>
+                        <option value="hindi">Hindi (Language)</option>
+                        <option value="spanish">Spanish (Language)</option>
+                        <option value="german">German (Language)</option>
+                        <option value="french">French (Language)</option>
+                        <option value="japanese">Japanese (Language)</option>
+                        <option value="other-languages">Other World Languages</option>
                       </select>
                     </label>
                     <label className="space-y-2 md:col-span-2">
@@ -410,6 +428,15 @@ export default function ExamManager() {
                       <div>
                         <p className="font-bold text-white">{exam.title}</p>
                         <p className="text-xs text-slate-400">{exam.questions?.length || 0} questions • {exam.durationMinutes} mins</p>
+                        {exam.questions && exam.questions.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {[...new Set(exam.questions.map(q => q.category).filter(Boolean))].map(cat => (
+                              <span key={cat} className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-300">
+                                {cat}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-300">{exam.status}</span>
                     </div>

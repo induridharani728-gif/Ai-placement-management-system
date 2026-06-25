@@ -28,6 +28,10 @@ const interviewExamSchema = new mongoose.Schema({
         enum: ['mcq', 'coding', 'short-answer', 'descriptive'],
         default: 'mcq'
       },
+      category: {
+        type: String,
+        default: 'coding'
+      },
       question: {
         type: String,
         required: true

@@ -1,6 +1,12 @@
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
+import bcrypt from 'bcryptjs';
+import { parse } from 'csv-parse/sync';
+import Student from '../models/Student.js';
+
 
 
 const ALLOWED_NOTIFICATION_TYPES = new Set([
@@ -233,6 +239,73 @@ export const createNotification = async (userId, type, title, message, relatedId
   }
 };
 
+const autoImportStudentFromCSV = async (identifier) => {
+  try {
+    const csvPath = path.join(process.cwd(), 'data', 'students.csv');
+    if (!fs.existsSync(csvPath)) return null;
+
+    const fileContent = fs.readFileSync(csvPath, 'utf-8');
+    const records = parse(fileContent, {
+      columns: true,
+      skip_empty_lines: true
+    });
+
+    const idStr = String(identifier).trim().toLowerCase();
+    const record = records.find(r => {
+      const studentId = String(r.Student_ID || r.student_id || r.id || '').trim().toLowerCase();
+      const email = `student${studentId}@college.edu`;
+      const altEmail = `student${studentId}@demo.edu`;
+      return studentId === idStr || email === idStr || altEmail === idStr;
+    });
+
+    if (!record) return null;
+
+    const studentId = String(record.Student_ID || record.student_id || record.id || '').trim();
+    const email = `student${studentId}@college.edu`;
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      const passwordHash = await bcrypt.hash('password123', 10);
+      user = await User.create({
+        name: record.Name || `Student ${studentId}`,
+        email,
+        password: passwordHash,
+        role: 'student'
+      });
+    }
+
+    const skills = [];
+    if (record.Coding_Skills) skills.push(`Coding: ${record.Coding_Skills}`);
+    if (record.Communication_Skills) skills.push(`Communication: ${record.Communication_Skills}`);
+    if (record.Soft_Skills_Rating) skills.push(`Soft Skills: ${record.Soft_Skills_Rating}`);
+    if (record.Aptitude_Test_Score) skills.push(`Aptitude: ${record.Aptitude_Test_Score}`);
+    if (record.Certifications) skills.push(`Certifications: ${record.Certifications}`);
+
+    await Student.findOneAndUpdate(
+      { user: user._id },
+      {
+        _id: studentId,
+        user: user._id,
+        rollNumber: studentId,
+        branch: record.Branch || 'CSE',
+        cgpa: parseFloat(record.CGPA) || 8.0,
+        age: parseInt(record.Age) || 21,
+        gender: record.Gender || 'Male',
+        degree: record.Degree || 'B.Tech',
+        skills,
+        placementStatus: record.Placement_Status || 'Not Placed',
+        isPlaced: record.Placement_Status === 'Placed'
+      },
+      { upsert: true, new: true }
+    );
+
+    return user;
+  } catch (err) {
+    console.error('Failed to auto-import student from CSV:', err);
+    return null;
+  }
+};
+
 // One-to-one notification utility
 export const sendDirectNotification = async (req, res) => {
   try {
@@ -260,17 +333,22 @@ export const sendDirectNotification = async (req, res) => {
     let recipientUser = null;
 
     if (directRecipientId) {
-      if (!mongoose.Types.ObjectId.isValid(directRecipientId)) {
-        return res.status(400).json({ message: 'Invalid recipientId' });
+      if (mongoose.Types.ObjectId.isValid(directRecipientId)) {
+        recipientUser = await User.findById(directRecipientId).select('_id role email');
+      } else {
+        recipientUser = await autoImportStudentFromCSV(directRecipientId);
       }
-      recipientUser = await User.findById(directRecipientId).select('_id role email');
     } else {
       recipientUser = await User.findOne({ email: emailRecipient }).select('_id role email');
+      if (!recipientUser) {
+        recipientUser = await autoImportStudentFromCSV(emailRecipient);
+      }
     }
 
     if (!recipientUser) {
       return res.status(404).json({ message: 'Recipient user not found' });
     }
+
 
     if (targetRole && String(targetRole).toLowerCase() !== String(recipientUser.role || '').toLowerCase()) {
       return res.status(400).json({ message: `Recipient is not in target role '${targetRole}'` });

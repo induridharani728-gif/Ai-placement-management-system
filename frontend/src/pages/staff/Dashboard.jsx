@@ -7,6 +7,8 @@ import EnhancedEmailModal from '../../components/EnhancedEmailModal';
 import { studentAPI, statsAPI, jobAPI, placementsAPI, examsAPI, placementStatsAPI, notificationsAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage, LanguageSelector } from '../../contexts/LanguageContext';
+
 import { 
   Users, Calendar, GraduationCap, TrendingUp, 
   Award, BarChart3, CheckCircle, ArrowUpRight, 
@@ -28,6 +30,7 @@ import {
 
 const StaffDashboard = () => {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
     // Notifications
     const [notifications, setNotifications] = useState([]);
     const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
@@ -483,58 +486,54 @@ const StaffDashboard = () => {
 
   // Menu Items
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'profile', label: 'My Profile', icon: User },
-    { id: 'all-students', label: 'Student Database', icon: Users },
-    { id: 'student-risk', label: 'Student Risk Queue', icon: AlertTriangle },
-    { id: 'video-interviews', label: 'Video Interviews', icon: Video },
-    { id: 'interview-ops', label: 'Interview Ops Board', icon: Calendar },
-    { id: 'drive-ops', label: 'Drive Operations', icon: Building2 },
-    { id: 'applications', label: 'Applications', icon: Briefcase },
-    { id: 'verification', label: 'KYC Verification', icon: UserCheck },
-    { id: 'exam-desk', label: 'Exam Desk', icon: BookOpen }, // Exam Desk for HR/Staff
-    { id: 'resume-desk', label: 'Resume Review Desk', icon: FileText },
-    { id: 'task-manager', label: 'Task Manager', icon: ClipboardList },
-    { id: 'ticketing', label: 'Student Ticketing', icon: Inbox },
-    { id: 'staff-audit', label: 'Staff Audit Trail', icon: Shield },
-    { id: 'staff-performance', label: 'Staff Performance', icon: TrendingUp },
-    { id: 'quick-actions', label: 'Quick Actions', icon: Zap },
-    { id: 'analytics', label: 'Analytics', icon: AnalyticsIcon },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'email', label: 'Email Center', icon: Mail },
-    { id: 'classes', label: 'Classes', icon: BookOpen },
-    { id: 'theme', label: 'Theme', icon: SettingsIcon },
-  ];
-
-
-  // Theme Colors - Dynamic
+    { id: 'dashboard', translationKey: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'profile', translationKey: 'myProfile', label: 'My Profile', icon: User },
+    { id: 'all-students', translationKey: 'studentDatabase', label: 'Student Database', icon: Users },
+    { id: 'student-risk', translationKey: 'studentRiskQueue', label: 'Student Risk Queue', icon: AlertTriangle },
+    { id: 'video-interviews', translationKey: 'videoInterviews', label: 'Video Interviews', icon: Video },
+    { id: 'interview-ops', translationKey: 'interviewOps', label: 'Interview Ops Board', icon: Calendar },
+    { id: 'drive-ops', translationKey: 'driveOps', label: 'Drive Operations', icon: Building2 },
+    { id: 'applications', translationKey: 'applications', label: 'Applications', icon: Briefcase },
+    { id: 'verification', translationKey: 'kycVerification', label: 'KYC Verification', icon: UserCheck },
+    { id: 'exam-desk', translationKey: 'examDesk', label: 'Exam Desk', icon: BookOpen }, // Exam Desk for HR/Staff
+    { id: 'resume-desk', translationKey: 'resumeReviewDesk', label: 'Resume Review Desk', icon: FileText },
+    { id: 'task-manager', translationKey: 'taskManager', label: 'Task Manager', icon: ClipboardList },
+    { id: 'ticketing', translationKey: 'studentTicketing', label: 'Student Ticketing', icon: Inbox },
+    { id: 'staff-audit', translationKey: 'staffAuditTrail', label: 'Staff Audit Trail', icon: Shield },
+    { id: 'staff-performance', translationKey: 'staffPerformance', label: 'Staff Performance', icon: TrendingUp },
+    { id: 'quick-actions', translationKey: 'quickActions', label: 'Quick Actions', icon: Zap },
+    { id: 'analytics', translationKey: 'analytics', label: 'Analytics', icon: AnalyticsIcon },
+    { id: 'reports', translationKey: 'reports', label: 'Reports', icon: BarChart3 },
+    { id: 'email', translationKey: 'emailCenter', label: 'Email Center', icon: Mail },
+    { id: 'classes', translationKey: 'classes', label: 'Classes', icon: BookOpen },
+    { id: 'theme', translationKey: 'theme', label: 'Theme', icon: SettingsIcon },
+  ];  // Theme Colors - Dynamic
   const colors = {
     light: {
-      bg: '#ffffff',
-      bgSecondary: '#f8f9fa',
-      text: '#1a1a1a',
-      textSecondary: '#666666',
-      border: '#e0e0e0',
+      bg: '#f8fafc',
+      bgSecondary: '#f1f5f9',
+      text: '#0f172a',
+      textSecondary: '#475569',
+      border: 'rgba(15, 23, 42, 0.08)',
       card: '#ffffff',
-      hover: '#f0f0f0',
-      sidebar: '#f8f9fa',
-      input: '#ffffff',
-      accent: '#4f46e5'
+      hover: 'rgba(99, 102, 241, 0.06)',
+      sidebar: '#ffffff',
+      input: '#f8fafc',
+      accent: '#6366f1'
     },
     dark: {
-      bg: '#020617',
+      bg: '#080c14',
       bgSecondary: '#0f172a',
-      text: '#ffffff',
-      textSecondary: '#cbd5e1',
-      border: 'rgba(255, 255, 255, 0.1)',
-      card: 'rgba(255, 255, 255, 0.02)',
-      hover: 'rgba(255, 255, 255, 0.05)',
-      sidebar: 'rgba(15, 23, 42, 0.4)',
-      input: 'rgba(255, 255, 255, 0.05)',
-      accent: '#4f46e5'
+      text: '#f8fafc',
+      textSecondary: '#94a3b8',
+      border: 'rgba(255, 255, 255, 0.08)',
+      card: 'rgba(15, 23, 42, 0.65)',
+      hover: 'rgba(99, 102, 241, 0.12)',
+      sidebar: 'rgba(8, 12, 20, 0.7)',
+      input: 'rgba(15, 23, 42, 0.8)',
+      accent: '#818cf8'
     }
   };
-
   useEffect(() => {
     localStorage.setItem('placement_system_theme', theme);
   }, [theme]);
@@ -567,6 +566,30 @@ const StaffDashboard = () => {
     return undefined;
   }, [theme]);
   const currentColors = colors[resolvedTheme];
+
+  // Inline StatCard component for analytics cards
+  const StatCard = ({ icon: Icon, label, value, trend, color, details }) => (
+    <div 
+      style={{ 
+        backgroundColor: currentColors.card,
+        borderColor: currentColors.border,
+        color: currentColors.text
+      }}
+      className="border p-6 rounded-[2rem] hover:border-indigo-500/50 transition-colors cursor-default group bg-white/5"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <Icon className={`w-8 h-8 ${color} group-hover:scale-110 transition-transform`} />
+        {trend && (
+          <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${trend.includes('-') ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+            {trend}
+          </span>
+        )}
+      </div>
+      <p className="text-4xl font-black">{value}</p>
+      <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: currentColors.textSecondary }}>{label}</p>
+      {details && <p className="text-[10px] mt-2" style={{ color: currentColors.textSecondary }}>{details}</p>}
+    </div>
+  );
 
   const staffSourceStudents = (Array.isArray(students) && students.length ? students : mockRecentStudents);
   const riskQueue = useMemo(() => {
@@ -740,45 +763,59 @@ const StaffDashboard = () => {
   const fetchAllData = async () => {
     setDataLoading(true);
     try {
-      // Fetch students from CSV data
-      try {
-        const csvRes = await studentAPI.getCsv();
-        const csvStudents = csvRes.data.students || [];
-        if (csvStudents.length > 0) {
-          // Map CSV data to match the component's expected format
-          const formattedStudents = csvStudents.map(csvStudent => ({
-            id: csvStudent.studentId || csvStudent._id,
-            name: csvStudent.name || `Student ${csvStudent.studentId}`,
-            email: csvStudent.email,
-            age: csvStudent.age,
-            gender: csvStudent.gender,
-            degree: csvStudent.degree,
-            branch: csvStudent.branch,
-            cgpa: csvStudent.cgpa,
-            internships: csvStudent.internships,
-            projects: csvStudent.projects,
-            codingSkills: csvStudent.skills?.find(s => s.includes('Coding'))?.split(':')[1]?.trim() || 0,
-            communicationSkills: csvStudent.skills?.find(s => s.includes('Communication'))?.split(':')[1]?.trim() || 0,
-            softSkillsRating: csvStudent.skills?.find(s => s.includes('Soft Skills'))?.split(':')[1]?.trim() || 0,
-            aptitudeTestScore: csvStudent.skills?.find(s => s.includes('Aptitude'))?.split(':')[1]?.trim() || 0,
-            certifications: csvStudent.skills?.find(s => s.includes('Certifications'))?.split(':')[1]?.trim() || 0,
-            backlogs: csvStudent.backlogs || 0,
-            placementStatus: csvStudent.placementStatus,
-            skills: csvStudent.skills || [],
-            section: csvStudent.branch,
-            status: csvStudent.placementStatus === 'Placed' ? 'placed' : csvStudent.placementStatus === 'In Process' ? 'interviewing' : 'pending',
-            resumeVerified: true,
-            attendance: 90, // Default value
-            fees: 'Paid', // Default value
-            phone: csvStudent.email?.replace('@college.edu', '').replace('student', '+91 98765 ')
-          }));
-          setStudents(formattedStudents);
-        } else {
-          setStudents(mockRecentStudents);
+      const results = await Promise.allSettled([
+        studentAPI.getCsv(),
+        placementsAPI.getAll(),
+        jobAPI.getAll(),
+        examsAPI.getAll(),
+        placementStatsAPI.getAll(),
+        statsAPI.getStaffStats()
+      ]);
+
+      // 1. Process Students CSV (index 0)
+      let studentsFetched = false;
+      const csvResult = results[0];
+      if (csvResult.status === 'fulfilled') {
+        try {
+          const csvStudents = csvResult.value.data.students || [];
+          if (csvStudents.length > 0) {
+            // Map CSV data to match the component's expected format
+            const formattedStudents = csvStudents.map(csvStudent => ({
+              id: csvStudent.studentId || csvStudent._id,
+              name: csvStudent.name || `Student ${csvStudent.studentId}`,
+              email: csvStudent.email,
+              age: csvStudent.age,
+              gender: csvStudent.gender,
+              degree: csvStudent.degree,
+              branch: csvStudent.branch,
+              cgpa: csvStudent.cgpa,
+              internships: csvStudent.internships,
+              projects: csvStudent.projects,
+              codingSkills: csvStudent.skills?.find(s => s.includes('Coding'))?.split(':')[1]?.trim() || 0,
+              communicationSkills: csvStudent.skills?.find(s => s.includes('Communication'))?.split(':')[1]?.trim() || 0,
+              softSkillsRating: csvStudent.skills?.find(s => s.includes('Soft Skills'))?.split(':')[1]?.trim() || 0,
+              aptitudeTestScore: csvStudent.skills?.find(s => s.includes('Aptitude'))?.split(':')[1]?.trim() || 0,
+              certifications: csvStudent.skills?.find(s => s.includes('Certifications'))?.split(':')[1]?.trim() || 0,
+              backlogs: csvStudent.backlogs || 0,
+              placementStatus: csvStudent.placementStatus,
+              skills: csvStudent.skills || [],
+              section: csvStudent.branch,
+              status: csvStudent.placementStatus === 'Placed' ? 'placed' : csvStudent.placementStatus === 'In Process' ? 'interviewing' : 'pending',
+              resumeVerified: true,
+              attendance: 90, // Default value
+              fees: 'Paid', // Default value
+              phone: csvStudent.email?.replace('@college.edu', '').replace('student', '+91 98765 ')
+            }));
+            setStudents(formattedStudents);
+            studentsFetched = true;
+          }
+        } catch (e) {
+          console.warn('Error processing CSV students:', e);
         }
-      } catch (error) {
-        console.warn('Failed to fetch CSV students, trying regular API:', error);
-        // Fallback to regular API
+      }
+
+      // Fallback if CSV failed or returned empty
+      if (!studentsFetched) {
         try {
           const studentsRes = await studentAPI.getAll();
           const apiStudents = studentsRes.data.students || studentsRes.data || [];
@@ -793,49 +830,45 @@ const StaffDashboard = () => {
         }
       }
 
-      // Fetch placements
-      try {
-        const placementsRes = await placementsAPI.getAll();
-        setPlacements(placementsRes.data.placements || []);
-      } catch (error) {
-        console.error('Error fetching placements:', error);
+      // 2. Process Placements (index 1)
+      const placementsResult = results[1];
+      if (placementsResult.status === 'fulfilled') {
+        setPlacements(placementsResult.value.data.placements || []);
+      } else {
+        console.error('Error fetching placements:', placementsResult.reason);
         setPlacements([]);
       }
 
-      // Fetch jobs
-      try {
-        const jobsRes = await jobAPI.getAll();
-        setJobs(jobsRes.data.jobs || mockCompanies);
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
-        setJobs(mockCompanies);
-      }
+      // 3. Process Jobs (index 2)
+      const jobsResult = SwapJobsResultHelper(results[2]);
+      setJobs(jobsResult);
 
-      // Fetch exams
-      try {
-        const examsRes = await examsAPI.getAll();
-        setExams(examsRes.data.exams || []);
-      } catch (error) {
-        console.error('Error fetching exams:', error);
+      // 4. Process Exams (index 3)
+      const examsResult = results[3];
+      if (examsResult.status === 'fulfilled') {
+        setExams(examsResult.value.data.exams || []);
+      } else {
+        console.error('Error fetching exams:', examsResult.reason);
         setExams([]);
       }
 
-      // Fetch placement statistics (Kaggle data)
-      try {
-        const statsRes = await placementStatsAPI.getAll();
+      // 5. Process Placement Stats (index 4)
+      const placementStatsResult = results[4];
+      if (placementStatsResult.status === 'fulfilled') {
+        const statsRes = placementStatsResult.value;
         if (statsRes.data && statsRes.data.placements) {
           setPlacementStats(statsRes.data);
         }
-      } catch (error) {
-        console.warn('Error fetching placement statistics:', error);
+      } else {
+        console.warn('Error fetching placement statistics:', placementStatsResult.reason);
       }
 
-      // Fetch staff stats
-      try {
-        const statsRes = await statsAPI.getStaffStats();
-        setDashboardStats(statsRes.data || stats);
-      } catch (error) {
-        console.error('Error fetching stats:', error);
+      // 6. Process Staff Stats (index 5)
+      const staffStatsResult = results[5];
+      if (staffStatsResult.status === 'fulfilled') {
+        setDashboardStats(staffStatsResult.value.data || stats);
+      } else {
+        console.error('Error fetching stats:', staffStatsResult.reason);
         setDashboardStats(stats);
       }
     } catch (error) {
@@ -843,6 +876,15 @@ const StaffDashboard = () => {
     } finally {
       setDataLoading(false);
     }
+  };
+
+  // Helper helper to handle Job Result parsing
+  const SwapJobsResultHelper = (jobRes) => {
+    if (jobRes.status === 'fulfilled') {
+      return jobRes.value.data.jobs || mockCompanies;
+    }
+    console.error('Error fetching jobs:', jobRes.reason);
+    return mockCompanies;
   };
 
   // ========== FIXED LOGOUT HANDLER ==========
@@ -1126,6 +1168,22 @@ const StaffDashboard = () => {
     });
   }, [students, searchTerm, filterBranch]);
 
+  const [studentPage, setStudentPage] = useState(1);
+  const studentsPerPage = 15;
+
+  useEffect(() => {
+    setStudentPage(1);
+  }, [searchTerm, filterBranch]);
+
+  const paginatedStudents = useMemo(() => {
+    const startIndex = (studentPage - 1) * studentsPerPage;
+    return filteredStudents.slice(startIndex, startIndex + studentsPerPage);
+  }, [filteredStudents, studentPage, studentsPerPage]);
+
+  const totalStudentPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredStudents.length / studentsPerPage));
+  }, [filteredStudents.length, studentsPerPage]);
+
   // UI Components
   const Modal = ({ title, children, onClose, size = 'lg' }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -1146,25 +1204,7 @@ const StaffDashboard = () => {
     </div>
   );
 
-  const StatCard = ({ icon: Icon, label, value, trend, color, details }) => (
-    <div 
-      style={{ 
-        backgroundColor: currentColors.card,
-        borderColor: currentColors.border
-      }}
-      className="border p-6 rounded-[2rem] hover:border-indigo-500/50 transition-colors cursor-default group"
-    >
-      <div className="flex justify-between items-start mb-4">
-        <Icon className={`w-8 h-8 ${color} group-hover:scale-110 transition-transform`} />
-        <span style={{ color: trend?.includes('-') ? '#ef4444' : '#10b981' }} className={`text-[10px] font-bold px-2 py-1 rounded-md ${trend?.includes('-') ? 'bg-red-500/10' : 'bg-emerald-500/10'}`}>
-          {trend || 'Active'}
-        </span>
-      </div>
-      <p style={{ color: currentColors.text }} className="text-4xl font-black">{value}</p>
-      <p style={{ color: currentColors.textSecondary }} className="text-xs font-bold uppercase tracking-widest mt-1">{label}</p>
-      {details && <p style={{ color: currentColors.textSecondary }} className="text-[10px] mt-2">{details}</p>}
-    </div>
-  );
+
 
   // Dashboard Home
   const DashboardHome = () => (
@@ -1565,7 +1605,7 @@ const StaffDashboard = () => {
               </tr>
             </thead>
             <tbody className="text-sm">
-              {filteredStudents.map(s => (
+              {paginatedStudents.map(s => (
                 <tr 
                   key={s.id} 
                   style={{ 
@@ -1649,6 +1689,73 @@ const StaffDashboard = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div style={{ borderColor: currentColors.border }} className="border-t p-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/5">
+          <p style={{ color: currentColors.textSecondary }} className="text-xs font-semibold">
+            Showing <span style={{ color: currentColors.text }} className="font-extrabold">{Math.min(filteredStudents.length, (studentPage - 1) * studentsPerPage + 1)}</span> to{' '}
+            <span style={{ color: currentColors.text }} className="font-extrabold">{Math.min(filteredStudents.length, studentPage * studentsPerPage)}</span> of{' '}
+            <span style={{ color: currentColors.text }} className="font-extrabold">{filteredStudents.length}</span> students
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setStudentPage(p => Math.max(1, p - 1))}
+              disabled={studentPage === 1}
+              style={{ 
+                backgroundColor: studentPage === 1 ? 'transparent' : currentColors.hover, 
+                borderColor: currentColors.border,
+                color: studentPage === 1 ? currentColors.textSecondary : currentColors.text 
+              }}
+              className="border px-4 py-2 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-500/10"
+            >
+              Previous
+            </button>
+            
+            <div className="flex items-center gap-1.5">
+              {(() => {
+                const pages = [];
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, studentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(totalStudentPages, startPage + maxVisiblePages - 1);
+                
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                  startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(
+                    <button
+                      key={i}
+                      onClick={() => setStudentPage(i)}
+                      style={{
+                        backgroundColor: studentPage === i ? 'rgb(99, 102, 241)' : currentColors.hover,
+                        color: studentPage === i ? '#ffffff' : currentColors.text,
+                        borderColor: studentPage === i ? 'rgb(99, 102, 241)' : currentColors.border
+                      }}
+                      className="border w-9 h-9 rounded-2xl text-xs font-bold transition-all hover:border-indigo-500/50"
+                    >
+                      {i}
+                    </button>
+                  );
+                }
+                return pages;
+              })()}
+            </div>
+
+            <button
+              onClick={() => setStudentPage(p => Math.min(totalStudentPages, p + 1))}
+              disabled={studentPage === totalStudentPages}
+              style={{ 
+                backgroundColor: studentPage === totalStudentPages ? 'transparent' : currentColors.hover, 
+                borderColor: currentColors.border,
+                color: studentPage === totalStudentPages ? currentColors.textSecondary : currentColors.text 
+              }}
+              className="border px-4 py-2 rounded-2xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-500/10"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -3994,7 +4101,7 @@ const StaffDashboard = () => {
               }`}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
-              {isSidebarOpen && <span className="font-semibold text-sm">{item.label}</span>}
+              {isSidebarOpen && <span className="font-semibold text-sm">{t(item.translationKey)}</span>}
             </button>
           ))}
         </nav>
@@ -4054,12 +4161,15 @@ const StaffDashboard = () => {
             </button>
             <div>
               <h1 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent tracking-tight capitalize">
-                {currentView.replace(/([A-Z-])/g, ' $1').trim().replace(/^./, str => str.toUpperCase())}
+                {t(menuItems.find(item => item.id === currentView)?.translationKey || currentView)}
               </h1>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Language Selector */}
+            <LanguageSelector currentColors={currentColors} />
+            
             {/* Notifications Bell */}
             <div className="relative">
               <button 

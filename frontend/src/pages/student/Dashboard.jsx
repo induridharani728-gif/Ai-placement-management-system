@@ -72,6 +72,7 @@ const useTheme = () => {
 import { jsPDF } from "jspdf";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useLanguage, LanguageSelector } from '../../contexts/LanguageContext';
 import api from "../../utils/api";
 import { authAPI, studentAPI, jobAPI, placementsAPI, examsAPI, applicationsAPI, statsAPI, aiAPI } from '../../services/api';
 import { downloadCertificate, previewCertificate } from '../../utils/certificateGenerator';
