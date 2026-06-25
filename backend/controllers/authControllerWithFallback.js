@@ -784,7 +784,7 @@ export const updateAvatar = async (req, res) => {
       }
 
       // Create avatar URL - accessible via /uploads/filename
-      const avatarUrl = `/uploads/${req.file.filename}`;
+      const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
       user.avatar = avatarUrl;
       await user.save();
 
@@ -800,7 +800,7 @@ export const updateAvatar = async (req, res) => {
       console.error('MongoDB error, using fallback:', dbError);
       
       // Fallback: still save the file and return success
-      const avatarUrl = `/uploads/${req.file.filename}`;
+      const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
       
       // Update in-memory user
       const user = memoryUsers.get(userId);

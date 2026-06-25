@@ -12,13 +12,13 @@ const AvatarUpload = ({ user, onUpdate }) => {
     const formData = new FormData();
     formData.append('avatar', file);
     try {
-      const res = await api.post('/auth/update-avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.post('/auth/update-avatar', formData);
       onUpdate(res.data.avatar);
       setPreview(URL.createObjectURL(file));
     } catch (err) {
-      alert('Upload failed');
+      console.error('Avatar upload failed:', err);
+      const message = err?.response?.data?.message || err?.message || 'Please try again.';
+      alert(`Upload failed: ${message}`);
     } finally {
       setUploading(false);
     }

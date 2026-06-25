@@ -68,9 +68,7 @@ const ImageCropUpload = ({ currentImage, onImageUpdate, userName = 'User' }) => 
       const formData = new FormData();
       formData.append('avatar', blob, 'avatar.jpg');
 
-      const response = await api.post('/auth/update-avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await api.post('/auth/update-avatar', formData);
 
       if (response.data.success) {
         // Update preview with full URL if needed
@@ -101,7 +99,8 @@ const ImageCropUpload = ({ currentImage, onImageUpdate, userName = 'User' }) => 
       }
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('❌ Failed to upload image. Please try again.');
+      const message = error?.response?.data?.message || error?.message || 'Please try again.';
+      alert(`❌ Failed to upload image: ${message}`);
     } finally {
       setUploading(false);
     }
